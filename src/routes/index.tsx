@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { CalorieRing } from "@/components/CalorieRing";
-import { MacroBar } from "@/components/MacroBar";
+import { MacroCard } from "@/components/MacroCard";
 import { StreakBadge } from "@/components/StreakBadge";
 import { useStore, todayTotals, dayKey } from "@/lib/store";
 import { Camera, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -18,7 +19,7 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
-  const { goals, streak, entries } = useStore();
+  const { goals, streak, entries, hydrated } = useStore();
   const totals = todayTotals(entries);
 
   const proteinGoal = Math.round((goals.calories * (goals.protein_pct / 100)) / 4);
@@ -30,44 +31,50 @@ function HomePage() {
     .sort((a, b) => b.loggedAt - a.loggedAt)
     .slice(0, 4);
 
-  const greeting = (() => {
+  // Render greeting client-side only to avoid SSR/CSR mismatch
+  const [greeting, setGreeting] = useState<{ text: string; date: string } | null>(null);
+  useEffect(() => {
     const h = new Date().getHours();
-    if (h < 12) return "Good morning";
-    if (h < 18) return "Good afternoon";
-    return "Good evening";
-  })();
+    const text = h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+    setGreeting({
+      text,
+      date: new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }),
+    });
+  }, []);
 
   return (
     <AppShell>
       <header className="flex items-start justify-between pt-2">
-        <div>
-          <p className="text-sm text-muted-foreground">{greeting},</p>
-          <h1 className="font-display text-3xl font-bold">{goals.name} 👋</h1>
+        <div className="min-w-0">
+          <h1 className="font-display text-[22px] font-bold leading-tight text-foreground">
+            {greeting ? `${greeting.text}, ${goals.name}` : `Hello, ${goals.name}`} 👋
+          </h1>
+          <p className="mt-0.5 text-xs text-muted-foreground">{greeting?.date ?? "\u00A0"}</p>
         </div>
-        <StreakBadge days={streak} />
+        <StreakBadge days={hydrated ? streak : 0} />
       </header>
 
-      <section className="mt-8 flex justify-center">
+      <section className="mt-7 flex justify-center">
         <CalorieRing eaten={totals.calories} goal={goals.calories} />
       </section>
 
-      <section className="mt-8 grid grid-cols-1 gap-4 rounded-3xl border border-white/5 bg-card p-5">
-        <MacroBar label="Protein" value={totals.protein_g} goal={proteinGoal} color="protein" />
-        <MacroBar label="Carbs" value={totals.carbs_g} goal={carbsGoal} color="carbs" />
-        <MacroBar label="Fat" value={totals.fat_g} goal={fatGoal} color="fat" />
+      <section className="mt-6 grid grid-cols-3 gap-2.5">
+        <MacroCard label="Protein" value={totals.protein_g} goal={proteinGoal} color="protein" delay={0} />
+        <MacroCard label="Carbs" value={totals.carbs_g} goal={carbsGoal} color="carbs" delay={150} />
+        <MacroCard label="Fat" value={totals.fat_g} goal={fatGoal} color="fat" delay={300} />
       </section>
 
       <motion.div whileTap={{ scale: 0.97 }} className="mt-6">
         <Link
           to="/scan"
-          className="glow-lime tap flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-4 font-semibold text-primary-foreground"
+          className="glow-lime flex h-[52px] items-center justify-center gap-2 rounded-2xl bg-primary px-6 font-bold text-primary-foreground"
         >
           <Camera className="h-5 w-5" strokeWidth={2.5} />
           Log Food
         </Link>
       </motion.div>
 
-      <section className="mt-8">
+      <section className="mt-7">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-display text-lg font-semibold">Recent meals</h2>
           <Link to="/diary" className="flex items-center text-xs text-muted-foreground">
@@ -75,20 +82,20 @@ function HomePage() {
           </Link>
         </div>
         {today.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-white/10 bg-card/50 p-6 text-center">
+          <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] p-6 text-center">
             <div className="text-3xl">🥗</div>
             <p className="mt-2 text-sm text-muted-foreground">No meals yet today. Tap Log Food to start.</p>
           </div>
         ) : (
           <ul className="flex flex-col gap-2">
             {today.map((e) => (
-              <li key={e.id} className="flex items-center gap-3 rounded-2xl border border-white/5 bg-card p-3">
+              <li key={e.id} className="glass flex items-center gap-3 rounded-2xl p-3">
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-surface text-xl">{e.emoji}</div>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-medium">{e.foodName}</div>
                   <div className="text-xs text-muted-foreground">{e.serving_size}</div>
                 </div>
-                <div className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary tabular-nums">
+                <div className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold tabular-nums text-primary">
                   {e.calories} kcal
                 </div>
               </li>
