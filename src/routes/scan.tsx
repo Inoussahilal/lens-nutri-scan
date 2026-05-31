@@ -207,7 +207,7 @@ function ScanPage() {
               <div className="mt-5">
                 <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">Ingredients</p>
                 <ul className="flex flex-col gap-1.5">
-                  {result.ingredients.map((ing, i) => (
+                  {result.ingredients.map((ing: { name: string; calories: number }, i: number) => (
                     <li key={i} className="flex items-center justify-between rounded-xl bg-surface/60 px-3 py-2 text-sm">
                       <span>{ing.name}</span>
                       <span className="tabular-nums text-muted-foreground">{ing.calories} kcal</span>
