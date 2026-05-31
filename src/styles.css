@@ -38,23 +38,23 @@
   --color-fat: var(--fat);
   --color-streak: var(--streak);
 
-  --font-display: "Sora", system-ui, sans-serif;
-  --font-sans: "DM Sans", system-ui, sans-serif;
+  --font-display: "Outfit", system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
 }
 
 :root {
   --radius: 1rem;
 
   /* Dark Luxury Health */
-  --background: oklch(0.13 0.01 270);            /* #0A0A0F */
+  --background: oklch(0.13 0.01 270);             /* ~#0A0A0F */
   --foreground: oklch(0.97 0.005 270);
-  --card: oklch(0.16 0.012 270);                  /* #13131A */
+  --card: oklch(0.16 0.012 270);                   /* ~#13131A */
   --card-foreground: oklch(0.97 0.005 270);
-  --surface: oklch(0.20 0.014 270);               /* #1C1C26 */
+  --surface: oklch(0.20 0.014 270);                /* ~#1C1C26 */
   --popover: oklch(0.16 0.012 270);
   --popover-foreground: oklch(0.97 0.005 270);
 
-  --primary: oklch(0.93 0.24 130);                /* #C6FF00 electric lime */
+  --primary: oklch(0.93 0.24 130);                 /* #A8FF3E lime */
   --primary-foreground: oklch(0.13 0.01 270);
   --secondary: oklch(0.20 0.014 270);
   --secondary-foreground: oklch(0.97 0.005 270);
@@ -68,18 +68,16 @@
   --input: oklch(1 0 0 / 10%);
   --ring: oklch(0.93 0.24 130);
 
-  --protein: oklch(0.80 0.21 145);                /* green */
-  --carbs: oklch(0.72 0.17 240);                  /* blue */
-  --fat: oklch(0.72 0.18 25);                     /* coral #FF6B6B */
-  --streak: oklch(0.78 0.20 50);                  /* fire orange */
+  --protein: #3E9BFF;
+  --carbs: #FFD93D;
+  --fat: #FF6B6B;
+  --streak: #FFB547;
 
   color-scheme: dark;
 }
 
 @layer base {
-  * {
-    border-color: var(--color-border);
-  }
+  * { border-color: var(--color-border); }
   html, body, #root {
     background-color: var(--color-background);
     color: var(--color-foreground);
@@ -87,40 +85,58 @@
     -webkit-font-smoothing: antialiased;
     overscroll-behavior-y: none;
   }
-  body {
-    min-height: 100vh;
-    min-height: 100dvh;
-  }
+  body { min-height: 100vh; min-height: 100dvh; }
   h1, h2, h3, h4, h5 { font-family: var(--font-display); letter-spacing: -0.02em; }
 }
 
 @layer utilities {
   .glass {
-    background: color-mix(in oklch, var(--card) 80%, transparent);
+    background: rgba(255,255,255,0.04);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255,255,255,0.07);
   }
   .glow-lime {
-    box-shadow: 0 0 24px -4px color-mix(in oklch, var(--primary) 60%, transparent);
+    box-shadow: 0 8px 28px -6px color-mix(in oklch, var(--primary) 55%, transparent);
   }
   .glow-streak {
-    box-shadow: 0 0 20px -4px color-mix(in oklch, var(--streak) 70%, transparent);
+    box-shadow: 0 0 0 0 rgba(255,181,71,0.5);
+    animation: streak-pulse 2.2s ease-in-out infinite;
   }
   .safe-top { padding-top: max(env(safe-area-inset-top), 1rem); }
   .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 1rem); }
-  .tap { transition: transform 150ms cubic-bezier(.34,1.56,.64,1); }
-  .tap:active { transform: scale(0.96); }
+  .tap { transition: transform 120ms cubic-bezier(.34,1.56,.64,1); }
+  .tap:active { transform: scale(0.97); }
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { scrollbar-width: none; }
 }
 
-@keyframes ring-draw {
-  from { stroke-dashoffset: var(--circumference); }
-  to { stroke-dashoffset: var(--offset); }
+@keyframes scan-corners {
+  0%, 100% { opacity: 0.45; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.04); }
 }
-@keyframes scan-pulse {
-  0%, 100% { opacity: 0.4; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.02); }
+.animate-scan-corners { animation: scan-corners 1.6s ease-in-out infinite; }
+
+@keyframes scan-line {
+  0% { transform: translateY(0); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(100%); opacity: 0; }
 }
-.animate-scan-pulse { animation: scan-pulse 1.8s ease-in-out infinite; }
+.animate-scan-line { animation: scan-line 1.8s ease-in-out infinite; }
+
+@keyframes streak-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(168,255,62,0.35); }
+  50% { box-shadow: 0 0 0 8px rgba(168,255,62,0); }
+}
+
+@keyframes dots {
+  0%, 20% { content: "."; }
+  40% { content: ".."; }
+  60%, 100% { content: "..."; }
+}
+.dots::after {
+  display: inline-block;
+  content: "...";
+  animation: dots 1.2s steps(3, end) infinite;
+}

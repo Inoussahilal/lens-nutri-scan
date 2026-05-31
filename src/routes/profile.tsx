@@ -1,140 +1,166 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { useStore } from "@/lib/store";
-import { useMemo, useState } from "react";
-import { Flame, Trophy, Utensils } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Minus, Plus } from "lucide-react";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
       { title: "NutriLens — Profile" },
-      { name: "description", content: "Manage your daily goals, macros and weight target." },
+      { name: "description", content: "Manage your daily calorie goal and macro split." },
     ],
   }),
   component: ProfilePage,
 });
 
 function ProfilePage() {
-  const { goals, setGoals, entries, streak } = useStore();
+  const { goals, setGoals, entries, bestStreak, startDate } = useStore();
 
-  const initials = goals.name.split(" ").map((s) => s[0]).join("").slice(0, 2).toUpperCase() || "U";
-
-  const stats = useMemo(() => {
-    const total = entries.length;
-    const days = new Set(entries.map((e) => new Date(e.loggedAt).toDateString())).size;
-    const avg = days > 0 ? Math.round(entries.reduce((s, e) => s + e.calories, 0) / days) : 0;
-    return { total, avg };
-  }, [entries]);
-
-  // Local controlled state for macro sliders to keep sum = 100
+  const [name, setName] = useState(goals.name);
+  const [calories, setCalories] = useState(goals.calories);
   const [p, setP] = useState(goals.protein_pct);
   const [c, setC] = useState(goals.carbs_pct);
-  const f = Math.max(0, 100 - p - c);
+  const [f, setF] = useState(goals.fat_pct);
 
-  function commit() {
-    setGoals({ protein_pct: p, carbs_pct: c, fat_pct: f });
+  // Sync local state when store hydrates
+  useEffect(() => {
+    setName(goals.name); setCalories(goals.calories);
+    setP(goals.protein_pct); setC(goals.carbs_pct); setF(goals.fat_pct);
+  }, [goals.name, goals.calories, goals.protein_pct, goals.carbs_pct, goals.fat_pct]);
+
+  // Distribute remainder when one slider changes, keeping sum = 100
+  function changeP(v: number) {
+    const nv = Math.max(0, Math.min(80, v));
+    const rest = 100 - nv;
+    const ratio = c + f > 0 ? c / (c + f) : 0.5;
+    const nc = Math.round(rest * ratio);
+    const nf = rest - nc;
+    setP(nv); setC(nc); setF(nf);
   }
+  function changeC(v: number) {
+    const nv = Math.max(0, Math.min(80, v));
+    const rest = 100 - nv;
+    const ratio = p + f > 0 ? p / (p + f) : 0.5;
+    const np = Math.round(rest * ratio);
+    const nf = rest - np;
+    setP(np); setC(nv); setF(nf);
+  }
+  function changeF(v: number) {
+    const nv = Math.max(0, Math.min(80, v));
+    const rest = 100 - nv;
+    const ratio = p + c > 0 ? p / (p + c) : 0.5;
+    const np = Math.round(rest * ratio);
+    const nc = rest - np;
+    setP(np); setC(nc); setF(nv);
+  }
+
+  function save() {
+    setGoals({ name: name.trim() || "You", calories, protein_pct: p, carbs_pct: c, fat_pct: f });
+    toast.success("✅ Profile saved");
+  }
+
+  const stats = useMemo(() => {
+    return { total: entries.length };
+  }, [entries]);
+
+  const startStr = startDate
+    ? new Date(startDate).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+    : "—";
+
+  const initials = (name || "A").split(" ").map((s) => s[0]).join("").slice(0, 2).toUpperCase();
+
+  // grams from %
+  const pG = Math.round((calories * (p / 100)) / 4);
+  const cG = Math.round((calories * (c / 100)) / 4);
+  const fG = Math.round((calories * (f / 100)) / 9);
 
   return (
     <AppShell>
       <header className="flex items-center gap-4 pt-2">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-2xl font-bold text-primary-foreground glow-lime">
+        <div
+          className="flex h-16 w-16 items-center justify-center rounded-full text-xl font-bold text-foreground"
+          style={{ border: "2px solid #A8FF3E", background: "var(--color-card)" }}
+        >
           {initials}
         </div>
         <div className="min-w-0 flex-1">
           <input
-            value={goals.name}
-            onChange={(e) => setGoals({ name: e.target.value })}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             className="w-full bg-transparent font-display text-2xl font-bold outline-none"
           />
           <p className="text-xs text-muted-foreground">Tap to edit name</p>
         </div>
       </header>
 
-      <section className="mt-6 grid grid-cols-3 gap-2">
-        <StatCard icon={<Flame className="h-4 w-4 text-streak" />} label="Streak" value={`${streak}d`} />
-        <StatCard icon={<Utensils className="h-4 w-4 text-primary" />} label="Logs" value={`${stats.total}`} />
-        <StatCard icon={<Trophy className="h-4 w-4 text-streak" />} label="Avg" value={`${stats.avg}`} sub="kcal" />
+      {/* Stats row */}
+      <section className="mt-5 grid grid-cols-3 gap-2 text-center">
+        <Stat label="Start" value={startStr} />
+        <Stat label="Meals" value={`${stats.total}`} />
+        <Stat label="Best 🔥" value={`${bestStreak}d`} />
       </section>
 
-      <section className="mt-6 rounded-3xl border border-white/5 bg-card p-5">
+      {/* Calorie goal */}
+      <section className="mt-5 rounded-2xl border border-white/7 bg-white/[0.04] p-5 backdrop-blur">
         <h2 className="font-display text-base font-semibold">Daily calorie goal</h2>
         <div className="mt-3 flex items-center gap-3">
-          <input
-            type="number"
-            inputMode="numeric"
-            value={goals.calories}
-            onChange={(e) => setGoals({ calories: Math.max(500, Math.min(8000, Number(e.target.value) || 0)) })}
-            className="flex-1 rounded-2xl border border-white/10 bg-surface px-4 py-3 font-display text-2xl font-bold tabular-nums outline-none focus:border-primary/50"
-          />
-          <span className="text-sm text-muted-foreground">kcal</span>
+          <button onClick={() => setCalories((v) => Math.max(500, v - 50))} className="tap flex h-11 w-11 items-center justify-center rounded-xl bg-surface">
+            <Minus className="h-4 w-4" />
+          </button>
+          <div className="flex-1 text-center">
+            <input
+              type="number"
+              inputMode="numeric"
+              value={calories}
+              onChange={(e) => setCalories(Math.max(500, Math.min(8000, Number(e.target.value) || 0)))}
+              className="w-full bg-transparent text-center font-display text-3xl font-bold tabular-nums outline-none"
+            />
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">kcal / day</div>
+          </div>
+          <button onClick={() => setCalories((v) => Math.min(8000, v + 50))} className="tap flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+            <Plus className="h-4 w-4" strokeWidth={2.5} />
+          </button>
         </div>
       </section>
 
-      <section className="mt-4 rounded-3xl border border-white/5 bg-card p-5">
+      {/* Macro split */}
+      <section className="mt-4 rounded-2xl border border-white/7 bg-white/[0.04] p-5 backdrop-blur">
         <div className="flex items-center justify-between">
           <h2 className="font-display text-base font-semibold">Macro split</h2>
-          <span className="text-xs text-muted-foreground">{p + c + f}%</span>
+          <span className="text-xs font-semibold text-primary tabular-nums">{p + c + f}%</span>
         </div>
         <div className="mt-4 flex flex-col gap-5">
-          <Slider label="Protein" color="protein" value={p} onChange={(v) => { const nv = Math.min(v, 100 - c); setP(nv); }} onCommit={commit} />
-          <Slider label="Carbs" color="carbs" value={c} onChange={(v) => { const nv = Math.min(v, 100 - p); setC(nv); }} onCommit={commit} />
-          <div>
-            <div className="flex items-baseline justify-between">
-              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Fat</span>
-              <span className="text-sm font-semibold tabular-nums">{f}%</span>
-            </div>
-            <div className="mt-2 h-2 rounded-full bg-surface">
-              <div className="h-full rounded-full bg-fat" style={{ width: `${f}%` }} />
-            </div>
-            <p className="mt-1 text-[10px] text-muted-foreground">Auto-balanced</p>
-          </div>
+          <MacroSlider label="Protein" color="#3E9BFF" value={p} grams={pG} onChange={changeP} />
+          <MacroSlider label="Carbs" color="#FFD93D" value={c} grams={cG} onChange={changeC} />
+          <MacroSlider label="Fat" color="#FF6B6B" value={f} grams={fG} onChange={changeF} />
         </div>
       </section>
 
-      <section className="mt-4 rounded-3xl border border-white/5 bg-card p-5">
-        <h2 className="font-display text-base font-semibold">Weight</h2>
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <NumberField
-            label="Current"
-            value={goals.weight_kg}
-            onChange={(v) => setGoals({ weight_kg: v })}
-            unit="kg"
-          />
-          <NumberField
-            label="Goal"
-            value={goals.weight_goal_kg}
-            onChange={(v) => setGoals({ weight_goal_kg: v })}
-            unit="kg"
-          />
-        </div>
-      </section>
+      <button onClick={save} className="glow-lime tap mt-5 h-[52px] w-full rounded-2xl bg-primary font-bold text-primary-foreground">
+        Save changes
+      </button>
 
       <p className="mt-6 text-center text-xs text-muted-foreground">NutriLens · Built with care</p>
     </AppShell>
   );
 }
 
-function StatCard({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub?: string }) {
+function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-white/5 bg-card p-3">
-      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-        {icon} {label}
-      </div>
-      <div className="mt-1 font-display text-xl font-bold tabular-nums">
-        {value}
-        {sub && <span className="ml-1 text-[10px] font-medium text-muted-foreground">{sub}</span>}
-      </div>
+    <div className="rounded-2xl border border-white/7 bg-white/[0.04] p-3 backdrop-blur">
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="mt-1 font-display text-base font-bold tabular-nums">{value}</div>
     </div>
   );
 }
 
-function Slider({ label, color, value, onChange, onCommit }: { label: string; color: "protein" | "carbs"; value: number; onChange: (v: number) => void; onCommit: () => void }) {
-  const bg = color === "protein" ? "var(--color-protein)" : "var(--color-carbs)";
+function MacroSlider({ label, color, value, grams, onChange }: { label: string; color: string; value: number; grams: number; onChange: (v: number) => void }) {
   return (
     <div>
       <div className="flex items-baseline justify-between">
-        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</span>
+        <span className="text-xs font-semibold uppercase tracking-wider" style={{ color }}>{label}</span>
         <span className="text-sm font-semibold tabular-nums">{value}%</span>
       </div>
       <input
@@ -143,30 +169,12 @@ function Slider({ label, color, value, onChange, onCommit }: { label: string; co
         max={80}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        onMouseUp={onCommit}
-        onTouchEnd={onCommit}
-        className="mt-2 w-full appearance-none rounded-full bg-surface h-2 outline-none accent-primary"
-        style={{ background: `linear-gradient(to right, ${bg} 0%, ${bg} ${(value / 80) * 100}%, var(--color-surface) ${(value / 80) * 100}%)` }}
+        className="mt-2 h-2 w-full appearance-none rounded-full outline-none"
+        style={{
+          background: `linear-gradient(to right, ${color} 0%, ${color} ${(value / 80) * 100}%, var(--color-surface) ${(value / 80) * 100}%)`,
+        }}
       />
+      <p className="mt-1 text-[11px] text-muted-foreground">{label} {value}% = <span className="tabular-nums text-foreground">{grams}g</span> / day</p>
     </div>
-  );
-}
-
-function NumberField({ label, value, onChange, unit }: { label: string; value: number; onChange: (v: number) => void; unit: string }) {
-  return (
-    <label className="rounded-2xl border border-white/10 bg-surface px-4 py-3">
-      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
-      <div className="flex items-baseline gap-1">
-        <input
-          type="number"
-          inputMode="decimal"
-          step={0.1}
-          value={value}
-          onChange={(e) => onChange(Math.max(0, Number(e.target.value) || 0))}
-          className="w-full bg-transparent font-display text-xl font-bold tabular-nums outline-none"
-        />
-        <span className="text-xs text-muted-foreground">{unit}</span>
-      </div>
-    </label>
   );
 }

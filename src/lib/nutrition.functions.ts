@@ -12,26 +12,27 @@ export const analyzeFood = createServerFn({ method: "POST" })
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("AI service not configured");
 
-    const prompt = `You are a precise nutritionist AI. Analyze the food in this image and return ONLY a valid JSON object (no markdown, no prose) with this exact shape:
+    const prompt = `You are a professional nutritionist AI. Analyze this food photo.
+Return ONLY valid JSON, no markdown, no explanation:
 {
-  "foodName": string,
-  "emoji": string (single food emoji),
+  "foodName": "descriptive meal name",
+  "emoji": "1 relevant food emoji",
   "calories": number,
   "protein_g": number,
   "carbs_g": number,
   "fat_g": number,
-  "serving_size": string,
-  "confidence_percent": number (0-100),
-  "ingredients": [{ "name": string, "calories": number }]
-}
-Be realistic. If no food is detected, set calories to 0 and confidence_percent low.`;
+  "fiber_g": number,
+  "serving_size": "e.g. 1 bowl ~350g",
+  "confidence_percent": number,
+  "meal_type": "breakfast|lunch|dinner|snack",
+  "health_score": number between 1 and 10,
+  "tip": "one short nutrition tip",
+  "ingredients": [{ "name": "string", "calories": number, "amount": "string" }]
+}`;
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Lovable-API-Key": apiKey,
-      },
+      headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
@@ -48,32 +49,38 @@ Be realistic. If no food is detected, set calories to 0 and confidence_percent l
 
     if (!res.ok) {
       const text = await res.text();
-      if (res.status === 429) throw new Error("Rate limit reached. Try again in a moment.");
-      if (res.status === 402) throw new Error("AI credits exhausted. Add credits in Workspace settings.");
+      if (res.status === 429) throw new Error("Rate limit reached. Try again soon.");
+      if (res.status === 402) throw new Error("AI credits exhausted.");
       throw new Error(`AI error: ${text.slice(0, 200)}`);
     }
 
     const json = await res.json();
     const raw: string = json?.choices?.[0]?.message?.content ?? "";
-    const cleaned = raw.replace(/```json\s*/gi, "").replace(/```/g, "").trim();
-    const start = cleaned.indexOf("{");
-    const end = cleaned.lastIndexOf("}");
-    if (start === -1 || end === -1) throw new Error("Could not parse AI response");
-    const parsed = JSON.parse(cleaned.slice(start, end + 1));
+    const cleaned = raw.replace(/```json/gi, "").replace(/```/g, "").trim();
+    const s = cleaned.indexOf("{");
+    const e = cleaned.lastIndexOf("}");
+    if (s === -1 || e === -1) throw new Error("Could not parse AI response");
+    const p = JSON.parse(cleaned.slice(s, e + 1));
 
+    const meal = ["breakfast", "lunch", "dinner", "snack"].includes(p.meal_type) ? p.meal_type : "snack";
     return {
-      foodName: String(parsed.foodName ?? "Unknown food"),
-      emoji: String(parsed.emoji ?? "🍽️"),
-      calories: Math.max(0, Math.round(Number(parsed.calories) || 0)),
-      protein_g: Math.max(0, Math.round(Number(parsed.protein_g) || 0)),
-      carbs_g: Math.max(0, Math.round(Number(parsed.carbs_g) || 0)),
-      fat_g: Math.max(0, Math.round(Number(parsed.fat_g) || 0)),
-      serving_size: String(parsed.serving_size ?? "1 serving"),
-      confidence_percent: Math.max(0, Math.min(100, Math.round(Number(parsed.confidence_percent) || 0))),
-      ingredients: Array.isArray(parsed.ingredients)
-        ? parsed.ingredients.slice(0, 12).map((i: any) => ({
+      foodName: String(p.foodName ?? "Unknown food"),
+      emoji: String(p.emoji ?? "🍽️"),
+      calories: Math.max(0, Math.round(Number(p.calories) || 0)),
+      protein_g: Math.max(0, Math.round(Number(p.protein_g) || 0)),
+      carbs_g: Math.max(0, Math.round(Number(p.carbs_g) || 0)),
+      fat_g: Math.max(0, Math.round(Number(p.fat_g) || 0)),
+      fiber_g: Math.max(0, Math.round(Number(p.fiber_g) || 0)),
+      serving_size: String(p.serving_size ?? "1 serving"),
+      confidence_percent: Math.max(0, Math.min(100, Math.round(Number(p.confidence_percent) || 0))),
+      meal_type: meal as "breakfast" | "lunch" | "dinner" | "snack",
+      health_score: Math.max(1, Math.min(10, Math.round(Number(p.health_score) || 5))),
+      tip: String(p.tip ?? ""),
+      ingredients: Array.isArray(p.ingredients)
+        ? p.ingredients.slice(0, 12).map((i: { name?: unknown; calories?: unknown; amount?: unknown }) => ({
             name: String(i?.name ?? ""),
             calories: Math.max(0, Math.round(Number(i?.calories) || 0)),
+            amount: String(i?.amount ?? ""),
           }))
         : [],
     };
