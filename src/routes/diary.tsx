@@ -148,11 +148,7 @@ function SwipeRow({ entry, onDelete }: { entry: FoodEntry; onDelete: () => void 
             <span className="truncate text-sm font-medium">{entry.foodName}</span>
             <span className="shrink-0 text-xs font-semibold tabular-nums text-primary">{entry.calories} kcal</span>
           </div>
-          <div className="mt-1 flex items-center gap-1.5 text-[10px] font-medium">
-            <span className="rounded-full px-1.5 py-0.5" style={{ background: "rgba(62,155,255,0.15)", color: "#3E9BFF" }}>P: {entry.protein_g}g 🔵</span>
-            <span className="rounded-full px-1.5 py-0.5" style={{ background: "rgba(255,217,61,0.15)", color: "#FFD93D" }}>C: {entry.carbs_g}g 🟡</span>
-            <span className="rounded-full px-1.5 py-0.5" style={{ background: "rgba(255,107,107,0.15)", color: "#FF6B6B" }}>F: {entry.fat_g}g 🔴</span>
-          </div>
+          <MacroChips p={entry.protein_g} c={entry.carbs_g} f={entry.fat_g} />
         </div>
       </motion.div>
     </motion.li>
