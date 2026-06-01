@@ -5,6 +5,7 @@ import { MacroCard } from "@/components/MacroCard";
 import { StreakBadge } from "@/components/StreakBadge";
 import { useStore, todayTotals, dayKey } from "@/lib/store";
 import { Camera, ChevronRight } from "lucide-react";
+import { MacroChips } from "@/components/MacroChips";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
@@ -90,13 +91,15 @@ function HomePage() {
           <ul className="flex flex-col gap-2">
             {today.map((e) => (
               <li key={e.id} className="glass flex items-center gap-3 rounded-2xl p-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-surface text-xl">{e.emoji}</div>
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-surface text-xl">{e.emoji}</div>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium">{e.foodName}</div>
-                  <div className="text-xs text-muted-foreground">{e.serving_size}</div>
-                </div>
-                <div className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold tabular-nums text-primary">
-                  {e.calories} kcal
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="truncate text-sm font-medium">{e.foodName}</span>
+                    <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold tabular-nums text-primary">
+                      {e.calories} kcal
+                    </span>
+                  </div>
+                  <MacroChips p={e.protein_g} c={e.carbs_g} f={e.fat_g} />
                 </div>
               </li>
             ))}
