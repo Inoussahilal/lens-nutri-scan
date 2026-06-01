@@ -4,6 +4,7 @@ import { useStore, type MealType, type FoodEntry, dayKey } from "@/lib/store";
 import { useRef } from "react";
 import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 import { Trash2, Plus } from "lucide-react";
+import { MacroChips } from "@/components/MacroChips";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/diary")({
