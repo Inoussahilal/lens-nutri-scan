@@ -110,7 +110,7 @@ function ProgressPage() {
           {totalG > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={pieData} dataKey="value" innerRadius={50} outerRadius={80} stroke="none" startAngle={90} endAngle={-270}>
+                <Pie data={pieData} dataKey="value" innerRadius={55} outerRadius={85} stroke="none" startAngle={90} endAngle={-270}>
                   {pieData.map((p, i) => <Cell key={i} fill={p.color} />)}
                 </Pie>
               </PieChart>
