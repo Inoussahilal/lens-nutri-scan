@@ -3,11 +3,14 @@ import { AppShell } from "@/components/AppShell";
 import { CalorieRing } from "@/components/CalorieRing";
 import { MacroCard } from "@/components/MacroCard";
 import { StreakBadge } from "@/components/StreakBadge";
+import { LangToggle } from "@/components/LangToggle";
 import { useStore, todayTotals, dayKey } from "@/lib/store";
-import { Camera, ChevronRight } from "lucide-react";
+import { useLanguage } from "@/lib/i18n";
+import { ChevronRight } from "lucide-react";
 import { MacroChips } from "@/components/MacroChips";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
