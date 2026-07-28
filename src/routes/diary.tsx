@@ -1,10 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { useStore, type MealType, type FoodEntry, dayKey } from "@/lib/store";
+import { useLanguage, type TKey } from "@/lib/i18n";
 import { useRef } from "react";
 import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 import { Trash2, Plus } from "lucide-react";
 import { MacroChips } from "@/components/MacroChips";
+import { LangToggle } from "@/components/LangToggle";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/diary")({
@@ -17,15 +19,16 @@ export const Route = createFileRoute("/diary")({
   component: DiaryPage,
 });
 
-const MEAL_ORDER: { key: MealType; label: string; emoji: string }[] = [
-  { key: "breakfast", label: "Breakfast", emoji: "🌅" },
-  { key: "lunch", label: "Lunch", emoji: "☀️" },
-  { key: "dinner", label: "Dinner", emoji: "🌙" },
-  { key: "snacks", label: "Snacks", emoji: "🍿" },
+const MEAL_ORDER: { key: MealType; labelKey: TKey; emoji: string }[] = [
+  { key: "breakfast", labelKey: "breakfast", emoji: "🌅" },
+  { key: "lunch", labelKey: "lunch", emoji: "☀️" },
+  { key: "dinner", labelKey: "dinner", emoji: "🌙" },
+  { key: "snacks", labelKey: "snacks", emoji: "🍿" },
 ];
 
 function DiaryPage() {
   const { entries, goals, deleteEntry } = useStore();
+  const { t, lang } = useLanguage();
   const navigate = useNavigate();
   const today = entries.filter((e) => dayKey(e.loggedAt) === dayKey(Date.now()));
   const totalKcal = today.reduce((s, e) => s + e.calories, 0);
@@ -37,16 +40,19 @@ function DiaryPage() {
 
   return (
     <AppShell>
-      <header className="pt-2">
-        <h1 className="font-display text-3xl font-bold">Today</h1>
-        <p className="text-xs text-muted-foreground">
-          {new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
-        </p>
+      <header className="flex items-start justify-between pt-2">
+        <div>
+          <h1 className="font-display text-3xl font-bold">{t("today")}</h1>
+          <p className="text-xs text-muted-foreground">
+            {new Date().toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US", { weekday: "long", month: "long", day: "numeric" })}
+          </p>
+        </div>
+        <LangToggle />
       </header>
 
       <div className="sticky top-2 z-10 mt-4 flex items-center justify-between rounded-2xl border border-white/7 bg-card/85 px-4 py-3 backdrop-blur">
         <div>
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Daily total</div>
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("daily_total")}</div>
           <div className="font-display text-xl font-bold tabular-nums">
             {totalKcal}
             <span className="text-xs font-medium text-muted-foreground"> / {goals.calories} kcal</span>
@@ -60,9 +66,10 @@ function DiaryPage() {
             border: `1px solid ${onTrack ? "#A8FF3E" : "#FF6B6B"}`,
           }}
         >
-          {onTrack ? "✓ On track" : `Over by ${overBy} kcal`}
+          {onTrack ? t("on_track") : t("over_by", { n: overBy })}
         </span>
       </div>
+
 
       <div className="mt-5 flex flex-col gap-5">
         {MEAL_ORDER.map(({ key, label, emoji }) => {
