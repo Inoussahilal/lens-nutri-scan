@@ -25,6 +25,18 @@ export interface Goals {
   weight_goal_kg: number;
 }
 
+export type ActivityLevel = "sedentary" | "moderate" | "active" | "very_active";
+
+export interface Profile {
+  onboarded: boolean;
+  firstName: string;
+  lastName: string;
+  calorieGoal: number;
+  activityLevel: ActivityLevel;
+  trialStartDate: number;
+  isSubscribed: boolean;
+}
+
 interface StoreState {
   entries: FoodEntry[];
   goals: Goals;
@@ -36,11 +48,29 @@ interface StoreState {
   loggedDays: Set<string>;
   startDate: number;
   hydrated: boolean;
+  profile: Profile;
+  setProfile: (p: Partial<Profile>) => void;
+  completeOnboarding: (p: { firstName: string; lastName: string; calorieGoal: number; activityLevel: ActivityLevel }) => void;
+  trialDaysLeft: number;
+  isPaywalled: boolean;
 }
 
 const StoreCtx = createContext<StoreState | null>(null);
 
 const STORAGE_KEY = "nutrilens.v2";
+const PROFILE_KEY = "nutrilens.profile.v1";
+
+export const TRIAL_DAYS = 3;
+
+const defaultProfile: Profile = {
+  onboarded: false,
+  firstName: "",
+  lastName: "",
+  calorieGoal: 2500,
+  activityLevel: "moderate",
+  trialStartDate: 0,
+  isSubscribed: false,
+};
 
 const defaultGoals: Goals = {
   calories: 2500,
@@ -51,6 +81,7 @@ const defaultGoals: Goals = {
   weight_kg: 78,
   weight_goal_kg: 72,
 };
+
 
 export function dayKey(ts: number): string {
   const d = new Date(ts);
