@@ -3,11 +3,14 @@ import { AppShell } from "@/components/AppShell";
 import { CalorieRing } from "@/components/CalorieRing";
 import { MacroCard } from "@/components/MacroCard";
 import { StreakBadge } from "@/components/StreakBadge";
+import { LangToggle } from "@/components/LangToggle";
 import { useStore, todayTotals, dayKey } from "@/lib/store";
-import { Camera, ChevronRight } from "lucide-react";
+import { useLanguage } from "@/lib/i18n";
+import { ChevronRight } from "lucide-react";
 import { MacroChips } from "@/components/MacroChips";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -20,7 +23,8 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
-  const { goals, streak, entries, hydrated } = useStore();
+  const { goals, streak, entries, hydrated, profile, trialDaysLeft } = useStore();
+  const { t, lang } = useLanguage();
   const totals = todayTotals(entries);
 
   const proteinGoal = Math.round((goals.calories * (goals.protein_pct / 100)) / 4);
@@ -33,36 +37,49 @@ function HomePage() {
     .slice(0, 4);
 
   // Render greeting client-side only to avoid SSR/CSR mismatch
-  const [greeting, setGreeting] = useState<{ text: string; date: string } | null>(null);
-  useEffect(() => {
-    const h = new Date().getHours();
-    const text = h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
-    setGreeting({
-      text,
-      date: new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }),
-    });
-  }, []);
+  const [now, setNow] = useState<Date | null>(null);
+  useEffect(() => { setNow(new Date()); }, []);
+
+  const greetingKey = now
+    ? now.getHours() < 12
+      ? "greeting_morning"
+      : now.getHours() < 18
+        ? "greeting_afternoon"
+        : "greeting_evening"
+    : null;
+  const displayName = profile.firstName || goals.name;
 
   return (
     <AppShell>
-      <header className="flex items-start justify-between pt-2">
+      <header className="flex items-start justify-between gap-2 pt-2">
         <div className="min-w-0">
           <h1 className="font-display text-[22px] font-bold leading-tight text-foreground">
-            {greeting ? `${greeting.text}, ${goals.name}` : `Hello, ${goals.name}`} 👋
+            {greetingKey ? `${t(greetingKey)}, ${displayName}` : displayName} 👋
           </h1>
-          <p className="mt-0.5 text-xs text-muted-foreground">{greeting?.date ?? "\u00A0"}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {now ? now.toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US", { weekday: "long", month: "long", day: "numeric" }) : "\u00A0"}
+          </p>
         </div>
-        <StreakBadge days={hydrated ? streak : 0} />
+        <div className="flex shrink-0 items-center gap-2">
+          <LangToggle />
+          <StreakBadge days={hydrated ? streak : 0} />
+        </div>
       </header>
+
+      {!profile.isSubscribed && trialDaysLeft > 0 && (
+        <div className="mt-4 rounded-2xl border border-primary/30 bg-primary/10 px-4 py-2.5 text-center text-xs font-semibold text-primary">
+          {t("trial_banner", { n: trialDaysLeft })}
+        </div>
+      )}
 
       <section className="mt-7 flex justify-center">
         <CalorieRing eaten={totals.calories} goal={goals.calories} />
       </section>
 
       <section className="mt-6 grid grid-cols-3 gap-2.5">
-        <MacroCard label="Protein" value={totals.protein_g} goal={proteinGoal} color="protein" delay={0} />
-        <MacroCard label="Carbs" value={totals.carbs_g} goal={carbsGoal} color="carbs" delay={150} />
-        <MacroCard label="Fat" value={totals.fat_g} goal={fatGoal} color="fat" delay={300} />
+        <MacroCard label={t("protein")} value={totals.protein_g} goal={proteinGoal} color="protein" delay={0} />
+        <MacroCard label={t("carbs")} value={totals.carbs_g} goal={carbsGoal} color="carbs" delay={150} />
+        <MacroCard label={t("fat")} value={totals.fat_g} goal={fatGoal} color="fat" delay={300} />
       </section>
 
       <motion.div whileTap={{ scale: 0.97 }} className="mt-6">
@@ -70,23 +87,23 @@ function HomePage() {
           to="/scan"
           className="glow-lime flex h-[52px] items-center justify-center gap-2 rounded-2xl bg-primary px-6 font-bold text-primary-foreground"
         >
-          <Camera className="h-5 w-5" strokeWidth={2.5} />
-          Log Food
+          {t("log_food")}
         </Link>
       </motion.div>
 
       <section className="mt-7">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-display text-lg font-semibold">Recent meals</h2>
+          <h2 className="font-display text-lg font-semibold">{t("recent_meals")}</h2>
           <Link to="/diary" className="flex items-center text-xs text-muted-foreground">
-            View all <ChevronRight className="h-3 w-3" />
+            {t("view_all")} <ChevronRight className="h-3 w-3" />
           </Link>
         </div>
         {today.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] p-6 text-center">
             <div className="text-3xl">🥗</div>
-            <p className="mt-2 text-sm text-muted-foreground">No meals yet today. Tap Log Food to start.</p>
+            <p className="mt-2 text-sm text-muted-foreground">{t("no_meals_today")}</p>
           </div>
+
         ) : (
           <ul className="flex flex-col gap-2">
             {today.map((e) => (

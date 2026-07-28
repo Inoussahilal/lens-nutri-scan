@@ -1,0 +1,261 @@
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+
+export type Lang = "fr" | "en";
+
+const LANG_KEY = "nutrilens.lang.v1";
+
+const en = {
+  // home
+  greeting_morning: "Good morning",
+  greeting_afternoon: "Good afternoon",
+  greeting_evening: "Good evening",
+  eaten: "EATEN",
+  left: "left",
+  over: "over",
+  of_kcal: "of {goal} kcal",
+  recent_meals: "Recent meals",
+  view_all: "View all",
+  log_food: "📷 Log Food",
+  no_meals_today: "No meals yet today. Tap Log Food to start.",
+  day: "day",
+  days: "days",
+  trial_banner: "🎉 Free trial: {n} day(s) remaining",
+  // nav
+  nav_home: "Home",
+  nav_diary: "Diary",
+  nav_scan: "Scan",
+  nav_stats: "Stats",
+  nav_profile: "Profile",
+  // diary
+  today: "Today",
+  on_track: "On track ✓",
+  over_by: "Over by {n} kcal",
+  daily_total: "Daily total",
+  breakfast: "Breakfast",
+  lunch: "Lunch",
+  dinner: "Dinner",
+  snacks: "Snacks",
+  tap_to_log: "Tap + to log",
+  todays_macros: "Today's macros",
+  protein: "Protein",
+  carbs: "Carbs",
+  fat: "Fat",
+  removed: "Removed",
+  // scan
+  scan_title: "Scan a meal",
+  scan_sub: "Point your camera — AI does the rest",
+  take_photo: "Take Photo",
+  upload_image: "Upload Image",
+  analyzing: "Analyzing...",
+  calories: "CALORIES",
+  health_score: "HEALTH SCORE",
+  ingredients: "Ingredients",
+  add_to_diary: "Add to Diary",
+  retake: "Retake",
+  tap_button_start: "Tap a button below to start",
+  scan_error: "Couldn't analyze — try a clearer photo",
+  added_to_diary: "added to diary!",
+  // stats
+  your_stats: "Your stats",
+  last_7_days: "Last 7 days",
+  calories_this_week: "Calories this week",
+  goal: "Goal",
+  macro_split_today: "Macro split today",
+  streak_calendar: "Streak calendar",
+  last_30_days: "Last 30 days",
+  current_streak: "Current streak",
+  best: "BEST",
+  avg: "AVG",
+  meals: "MEALS",
+  total: "total",
+  no_data_today: "No data today",
+  // profile
+  tap_to_edit: "Tap to edit name",
+  daily_calorie_goal: "Daily calorie goal",
+  macro_split: "Macro split",
+  save_changes: "Save changes",
+  start: "START",
+  profile_saved: "✅ Profile saved!",
+  per_day: "kcal / day",
+  // paywall
+  trial_ended: "Your free trial has ended",
+  subscribe_sub: "Subscribe to continue tracking your nutrition",
+  per_month: "/ month",
+  incl_scans: "Unlimited AI food scans",
+  incl_diary: "Full diary & history",
+  incl_macros: "Macro & calorie tracking",
+  incl_progress: "Progress charts & streaks",
+  pay_mtn: "Pay with MTN MoMo",
+  pay_moov: "Pay with Moov Money",
+  pay_celtiis: "Pay with Celtiis Cash",
+  i_have_paid: "I have paid",
+  verifying: "Verifying...",
+  payment_received: "✅ Payment received! Verifying...",
+  activation_note: "After payment, allow up to 5 minutes for activation",
+  pay_instructions: "Send 6,000 FCFA to the number +22997000000 with reference: {ref}\nThen tap 'I have paid' below",
+  sub_activated: "Welcome back! Subscription activated 🎉",
+  // onboarding
+  ob_title: "Track your nutrition with AI",
+  ob_sub: "Snap a photo of any meal and get instant calorie & macro breakdown",
+  get_started: "Get Started",
+  tell_us: "Tell us about you",
+  first_name: "Your first name",
+  last_name: "Your last name",
+  calorie_goal_ph: "Daily calorie goal (kcal)",
+  activity_level: "Activity level",
+  sedentary: "Sedentary",
+  moderate: "Moderate",
+  active: "Active",
+  very_active: "Very Active",
+  continue: "Continue",
+  required: "This field is required",
+  trial_starts: "Your 3-day free trial starts now 🎉",
+  after_3_days: "After 3 days: $10/month to continue",
+  start_trial: "Start Free Trial",
+  no_payment: "No payment required now",
+};
+
+export type TKey = keyof typeof en;
+
+const fr: Record<TKey, string> = {
+  greeting_morning: "Bonjour",
+  greeting_afternoon: "Bon après-midi",
+  greeting_evening: "Bonsoir",
+  eaten: "MANGÉ",
+  left: "restant",
+  over: "dépassé",
+  of_kcal: "sur {goal} kcal",
+  recent_meals: "Repas récents",
+  view_all: "Voir tout",
+  log_food: "📷 Scanner un repas",
+  no_meals_today: "Aucun repas aujourd'hui. Appuyez sur Scanner pour commencer.",
+  day: "jour",
+  days: "jours",
+  trial_banner: "🎉 Essai gratuit : {n} jour(s) restant(s)",
+  nav_home: "Accueil",
+  nav_diary: "Journal",
+  nav_scan: "Scanner",
+  nav_stats: "Stats",
+  nav_profile: "Profil",
+  today: "Aujourd'hui",
+  on_track: "Dans les objectifs ✓",
+  over_by: "Dépassé de {n} kcal",
+  daily_total: "Total du jour",
+  breakfast: "Petit-déjeuner",
+  lunch: "Déjeuner",
+  dinner: "Dîner",
+  snacks: "Collations",
+  tap_to_log: "Appuyer sur + pour ajouter",
+  todays_macros: "Macros du jour",
+  protein: "Protéines",
+  carbs: "Glucides",
+  fat: "Lipides",
+  removed: "Supprimé",
+  scan_title: "Scanner un repas",
+  scan_sub: "Pointez la caméra — l'IA fait le reste",
+  take_photo: "Prendre une photo",
+  upload_image: "Importer une image",
+  analyzing: "Analyse en cours...",
+  calories: "CALORIES",
+  health_score: "SCORE SANTÉ",
+  ingredients: "Ingrédients",
+  add_to_diary: "Ajouter au journal",
+  retake: "Reprendre",
+  tap_button_start: "Appuyez sur un bouton ci-dessous",
+  scan_error: "Analyse impossible — essayez une photo plus nette",
+  added_to_diary: "ajouté au journal !",
+  your_stats: "Vos stats",
+  last_7_days: "7 derniers jours",
+  calories_this_week: "Calories cette semaine",
+  goal: "Objectif",
+  macro_split_today: "Répartition des macros",
+  streak_calendar: "Calendrier de série",
+  last_30_days: "30 derniers jours",
+  current_streak: "Série actuelle",
+  best: "MEILLEUR",
+  avg: "MOY.",
+  meals: "REPAS",
+  total: "total",
+  no_data_today: "Aucune donnée aujourd'hui",
+  tap_to_edit: "Appuyer pour modifier",
+  daily_calorie_goal: "Objectif calorique",
+  macro_split: "Répartition des macros",
+  save_changes: "Sauvegarder",
+  start: "DÉBUT",
+  profile_saved: "✅ Profil sauvegardé !",
+  per_day: "kcal / jour",
+  trial_ended: "Votre essai gratuit est terminé",
+  subscribe_sub: "Abonnez-vous pour continuer",
+  per_month: "/ mois",
+  incl_scans: "Scans IA illimités",
+  incl_diary: "Journal & historique complets",
+  incl_macros: "Suivi des macros & calories",
+  incl_progress: "Graphiques de progression & séries",
+  pay_mtn: "Payer avec MTN MoMo",
+  pay_moov: "Payer avec Moov Money",
+  pay_celtiis: "Payer avec Celtiis Cash",
+  i_have_paid: "J'ai payé",
+  verifying: "Vérification en cours...",
+  payment_received: "✅ Paiement reçu ! Vérification en cours...",
+  activation_note: "Après paiement, comptez jusqu'à 5 minutes pour l'activation",
+  pay_instructions: "Envoyez 6 000 FCFA au numéro +22997000000 avec la référence : {ref}\nPuis appuyez sur « J'ai payé » ci-dessous",
+  sub_activated: "Bon retour ! Abonnement activé 🎉",
+  ob_title: "Suivre votre nutrition avec l'IA",
+  ob_sub: "Prenez en photo n'importe quel repas et obtenez instantanément calories & macros",
+  get_started: "Commencer",
+  tell_us: "Parlez-nous de vous",
+  first_name: "Votre prénom",
+  last_name: "Votre nom",
+  calorie_goal_ph: "Objectif calorique (kcal)",
+  activity_level: "Niveau d'activité",
+  sedentary: "Sédentaire",
+  moderate: "Modéré",
+  active: "Actif",
+  very_active: "Très actif",
+  continue: "Continuer",
+  required: "Ce champ est requis",
+  trial_starts: "Votre essai de 3 jours commence maintenant 🎉",
+  after_3_days: "Après 3 jours : 10 $/mois pour continuer",
+  start_trial: "Démarrer l'essai gratuit",
+  no_payment: "Aucun paiement requis maintenant",
+};
+
+const dicts: Record<Lang, Record<TKey, string>> = { fr, en };
+
+interface Ctx {
+  lang: Lang;
+  setLang: (l: Lang) => void;
+  t: (k: TKey, vars?: Record<string, string | number>) => string;
+}
+
+const LangCtx = createContext<Ctx | null>(null);
+
+export function LanguageProvider({ children }: { children: ReactNode }) {
+  const [lang, setLangState] = useState<Lang>("fr");
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(LANG_KEY);
+      if (saved === "fr" || saved === "en") setLangState(saved);
+    } catch {}
+  }, []);
+
+  function setLang(l: Lang) {
+    setLangState(l);
+    try { localStorage.setItem(LANG_KEY, l); } catch {}
+  }
+
+  function t(k: TKey, vars?: Record<string, string | number>) {
+    let s = dicts[lang][k] ?? dicts.en[k] ?? k;
+    if (vars) for (const [key, v] of Object.entries(vars)) s = s.replaceAll(`{${key}}`, String(v));
+    return s;
+  }
+
+  return <LangCtx.Provider value={{ lang, setLang, t }}>{children}</LangCtx.Provider>;
+}
+
+export function useLanguage() {
+  const ctx = useContext(LangCtx);
+  if (!ctx) throw new Error("useLanguage must be used within LanguageProvider");
+  return ctx;
+}

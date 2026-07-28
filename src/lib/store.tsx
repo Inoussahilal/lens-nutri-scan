@@ -25,6 +25,18 @@ export interface Goals {
   weight_goal_kg: number;
 }
 
+export type ActivityLevel = "sedentary" | "moderate" | "active" | "very_active";
+
+export interface Profile {
+  onboarded: boolean;
+  firstName: string;
+  lastName: string;
+  calorieGoal: number;
+  activityLevel: ActivityLevel;
+  trialStartDate: number;
+  isSubscribed: boolean;
+}
+
 interface StoreState {
   entries: FoodEntry[];
   goals: Goals;
@@ -36,11 +48,29 @@ interface StoreState {
   loggedDays: Set<string>;
   startDate: number;
   hydrated: boolean;
+  profile: Profile;
+  setProfile: (p: Partial<Profile>) => void;
+  completeOnboarding: (p: { firstName: string; lastName: string; calorieGoal: number; activityLevel: ActivityLevel }) => void;
+  trialDaysLeft: number;
+  isPaywalled: boolean;
 }
 
 const StoreCtx = createContext<StoreState | null>(null);
 
 const STORAGE_KEY = "nutrilens.v2";
+const PROFILE_KEY = "nutrilens.profile.v1";
+
+export const TRIAL_DAYS = 3;
+
+const defaultProfile: Profile = {
+  onboarded: false,
+  firstName: "",
+  lastName: "",
+  calorieGoal: 2500,
+  activityLevel: "moderate",
+  trialStartDate: 0,
+  isSubscribed: false,
+};
 
 const defaultGoals: Goals = {
   calories: 2500,
@@ -51,6 +81,7 @@ const defaultGoals: Goals = {
   weight_kg: 78,
   weight_goal_kg: 72,
 };
+
 
 export function dayKey(ts: number): string {
   const d = new Date(ts);
@@ -110,12 +141,19 @@ function seedDemoEntries(): FoodEntry[] {
   ];
 }
 
+function daysBetween(a: number, b: number) {
+  const d1 = new Date(a); d1.setHours(0, 0, 0, 0);
+  const d2 = new Date(b); d2.setHours(0, 0, 0, 0);
+  return Math.floor((d2.getTime() - d1.getTime()) / 86400000);
+}
+
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [entries, setEntries] = useState<FoodEntry[]>([]);
   const [goals, setGoalsState] = useState<Goals>(defaultGoals);
   const [bestStreak, setBestStreakState] = useState(0);
   const [startDate, setStartDate] = useState<number>(0);
   const [hydrated, setHydrated] = useState(false);
+  const [profile, setProfileState] = useState<Profile>(defaultProfile);
 
   useEffect(() => {
     let loaded = false;
@@ -129,6 +167,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (typeof parsed.startDate === "number") setStartDate(parsed.startDate);
         loaded = true;
       }
+    } catch {}
+    try {
+      const rawP = localStorage.getItem(PROFILE_KEY);
+      if (rawP) setProfileState({ ...defaultProfile, ...JSON.parse(rawP) });
     } catch {}
     if (!loaded) {
       const seeded = seedDemoEntries();
@@ -157,25 +199,61 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     } catch {}
   }, [entries, goals, bestStreak, startDate, hydrated]);
 
+  useEffect(() => {
+    if (!hydrated) return;
+    try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); } catch {}
+  }, [profile, hydrated]);
+
   const value = useMemo<StoreState>(() => {
     const loggedDays = new Set(entries.map((e) => dayKey(e.loggedAt)));
+    const elapsed = profile.trialStartDate ? daysBetween(profile.trialStartDate, Date.now()) : 0;
+    const trialDaysLeft = Math.max(0, TRIAL_DAYS - elapsed);
+    const isPaywalled = profile.onboarded && !profile.isSubscribed && trialDaysLeft <= 0;
+
+    // Profile is the source of truth for the user's name and calorie goal
+    const mergedGoals: Goals = profile.onboarded
+      ? { ...goals, name: profile.firstName || goals.name, calories: profile.calorieGoal }
+      : goals;
+
     return {
       entries,
-      goals,
+      goals: mergedGoals,
       addEntry: (e) =>
         setEntries((prev) => [
           ...prev,
           { ...e, id: crypto.randomUUID(), loggedAt: e.loggedAt ?? Date.now() },
         ]),
       deleteEntry: (id) => setEntries((prev) => prev.filter((x) => x.id !== id)),
-      setGoals: (g) => setGoalsState((prev) => ({ ...prev, ...g })),
+      setGoals: (g) => {
+        setGoalsState((prev) => ({ ...prev, ...g }));
+        setProfileState((prev) => ({
+          ...prev,
+          ...(g.name !== undefined ? { firstName: g.name } : {}),
+          ...(g.calories !== undefined ? { calorieGoal: g.calories } : {}),
+        }));
+      },
       streak: computeStreak(loggedDays),
       bestStreak,
       loggedDays,
       startDate: startDate || Date.now(),
       hydrated,
+      profile,
+      setProfile: (p) => setProfileState((prev) => ({ ...prev, ...p })),
+      completeOnboarding: (p) => {
+        setProfileState((prev) => ({
+          ...prev,
+          ...p,
+          onboarded: true,
+          trialStartDate: prev.trialStartDate || Date.now(),
+        }));
+        setGoalsState((prev) => ({ ...prev, name: p.firstName, calories: p.calorieGoal }));
+        setStartDate((prev) => prev || Date.now());
+      },
+      trialDaysLeft,
+      isPaywalled,
     };
-  }, [entries, goals, bestStreak, startDate, hydrated]);
+  }, [entries, goals, bestStreak, startDate, hydrated, profile]);
+
 
   return <StoreCtx.Provider value={value}>{children}</StoreCtx.Provider>;
 }

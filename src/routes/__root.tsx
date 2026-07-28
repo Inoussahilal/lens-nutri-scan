@@ -12,6 +12,8 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { StoreProvider } from "../lib/store";
+import { LanguageProvider } from "../lib/i18n";
+import { AppGate } from "../components/AppGate";
 import { Toaster } from "sonner";
 
 function NotFoundComponent() {
@@ -100,10 +102,15 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <StoreProvider>
-        <Outlet />
-        <Toaster theme="dark" position="top-center" toastOptions={{ style: { background: "var(--color-card)", color: "var(--color-foreground)", border: "1px solid rgba(255,255,255,0.08)" } }} />
-      </StoreProvider>
+      <LanguageProvider>
+        <StoreProvider>
+          <AppGate>
+            <Outlet />
+          </AppGate>
+          <Toaster theme="dark" position="top-center" toastOptions={{ style: { background: "var(--color-card)", color: "var(--color-foreground)", border: "1px solid rgba(255,255,255,0.08)" } }} />
+        </StoreProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }
+

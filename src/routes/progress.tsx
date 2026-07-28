@@ -1,9 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
+import { LangToggle } from "@/components/LangToggle";
 import { useStore, dayKey } from "@/lib/store";
+import { useLanguage } from "@/lib/i18n";
 import { useMemo } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { Flame, BarChart3, Utensils } from "lucide-react";
+
 
 export const Route = createFileRoute("/progress")({
   head: () => ({
@@ -26,6 +29,8 @@ function seedRandom(seed: number) {
 
 function ProgressPage() {
   const { entries, goals, loggedDays, bestStreak, streak } = useStore();
+  const { t } = useLanguage();
+
 
   const weekly = useMemo(() => {
     const today = new Date();
@@ -54,10 +59,11 @@ function ProgressPage() {
   const totalF = today.reduce((s, e) => s + e.fat_g, 0);
   const totalG = totalP + totalC + totalF;
   const pieData = [
-    { name: "Protein", value: totalP, color: "#3E9BFF" },
-    { name: "Carbs", value: totalC, color: "#FFD93D" },
-    { name: "Fat", value: totalF, color: "#FF6B6B" },
+    { name: t("protein"), value: totalP, color: "#3E9BFF" },
+    { name: t("carbs"), value: totalC, color: "#FFD93D" },
+    { name: t("fat"), value: totalF, color: "#FF6B6B" },
   ];
+
 
   // 30-day calendar (6 rows × 5 cols)
   const calendar = Array.from({ length: 30 }, (_, i) => {
@@ -70,17 +76,21 @@ function ProgressPage() {
 
   return (
     <AppShell>
-      <header className="pt-2">
-        <h1 className="font-display text-3xl font-bold">Your stats</h1>
-        <p className="text-xs text-muted-foreground">Last 7 days</p>
+      <header className="flex items-start justify-between pt-2">
+        <div>
+          <h1 className="font-display text-3xl font-bold">{t("your_stats")}</h1>
+          <p className="text-xs text-muted-foreground">{t("last_7_days")}</p>
+        </div>
+        <LangToggle />
       </header>
 
       {/* Weekly chart */}
       <section className="mt-5 rounded-2xl border border-white/7 bg-white/[0.04] p-4 backdrop-blur">
         <div className="flex items-baseline justify-between px-1">
-          <h2 className="font-display text-base font-semibold">Calories this week</h2>
-          <span className="text-[10px] text-muted-foreground">Goal {goals.calories}</span>
+          <h2 className="font-display text-base font-semibold">{t("calories_this_week")}</h2>
+          <span className="text-[10px] text-muted-foreground">{t("goal")} {goals.calories}</span>
         </div>
+
         <div className="mt-3 h-44">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={weekly} margin={{ top: 8, right: 4, left: 4, bottom: 0 }}>
@@ -90,7 +100,7 @@ function ProgressPage() {
                 cursor={{ fill: "rgba(255,255,255,0.04)" }}
                 contentStyle={{ background: "var(--color-surface)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, fontSize: 12 }}
                 labelStyle={{ color: "var(--color-muted-foreground)" }}
-                formatter={(v: number) => [`${v} kcal`, "Calories"]}
+                formatter={(v: number) => [`${v} kcal`, t("calories")]}
               />
               <ReferenceLine y={goals.calories} stroke="#FF6B6B" strokeDasharray="4 4" />
               <Bar dataKey="kcal" radius={[8, 8, 0, 0]} isAnimationActive>
@@ -105,7 +115,7 @@ function ProgressPage() {
 
       {/* Macro donut */}
       <section className="mt-4 rounded-2xl border border-white/7 bg-white/[0.04] p-4 backdrop-blur">
-        <h2 className="px-1 font-display text-base font-semibold">Macro split today</h2>
+        <h2 className="px-1 font-display text-base font-semibold">{t("macro_split_today")}</h2>
         <div className="relative mt-2 h-44">
           {totalG > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
@@ -116,12 +126,12 @@ function ProgressPage() {
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex h-full items-center justify-center text-xs text-muted-foreground">No data today</div>
+            <div className="flex h-full items-center justify-center text-xs text-muted-foreground">{t("no_data_today")}</div>
           )}
           {totalG > 0 && (
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
               <div className="font-display text-2xl font-bold tabular-nums">{totalG}g</div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">total</div>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("total")}</div>
             </div>
           )}
         </div>
@@ -145,8 +155,9 @@ function ProgressPage() {
       {/* Streak calendar */}
       <section className="mt-4 rounded-2xl border border-white/7 bg-white/[0.04] p-4 backdrop-blur">
         <div className="flex items-center justify-between px-1">
-          <h2 className="font-display text-base font-semibold">Streak calendar</h2>
-          <span className="text-xs text-muted-foreground">Last 30 days</span>
+          <h2 className="font-display text-base font-semibold">{t("streak_calendar")}</h2>
+          <span className="text-xs text-muted-foreground">{t("last_30_days")}</span>
+
         </div>
         <div className="mt-3 grid grid-cols-5 gap-2">
           {calendar.map((c) => (
@@ -159,15 +170,16 @@ function ProgressPage() {
           ))}
         </div>
         <p className="mt-3 text-center text-sm">
-          🔥 Current streak: <span className="font-semibold text-primary tabular-nums">{streak} days</span>
+          🔥 {t("current_streak")}: <span className="font-semibold text-primary tabular-nums">{streak} {streak === 1 ? t("day") : t("days")}</span>
         </p>
       </section>
 
       {/* Stat cards */}
       <section className="mt-4 grid grid-cols-3 gap-2">
-        <StatCard icon={<Flame className="h-4 w-4 text-streak" />} label="Best" value={`${bestStreak}d`} />
-        <StatCard icon={<BarChart3 className="h-4 w-4 text-primary" />} label="Avg" value={`${avg7}`} sub="kcal" />
-        <StatCard icon={<Utensils className="h-4 w-4 text-primary" />} label="Meals" value={`${entries.length}`} />
+        <StatCard icon={<Flame className="h-4 w-4 text-streak" />} label={t("best")} value={`${bestStreak}d`} />
+        <StatCard icon={<BarChart3 className="h-4 w-4 text-primary" />} label={t("avg")} value={`${avg7}`} sub="kcal" />
+        <StatCard icon={<Utensils className="h-4 w-4 text-primary" />} label={t("meals")} value={`${entries.length}`} />
+
       </section>
     </AppShell>
   );

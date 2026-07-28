@@ -1,9 +1,12 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/lib/i18n";
 
 interface Props { eaten: number; goal: number; }
 
 export function CalorieRing({ eaten, goal }: Props) {
+  const { t } = useLanguage();
+
   const stroke = 14;
   const radius = 86;
   const circumference = 2 * Math.PI * radius;
@@ -50,12 +53,17 @@ export function CalorieRing({ eaten, goal }: Props) {
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
         <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">Eaten</div>
         <div className="font-display text-[44px] font-bold leading-none tabular-nums text-foreground">{display}</div>
+        <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">{t("eaten")}</div>
+        <div className="font-display text-[44px] font-bold leading-none tabular-nums text-foreground">{display}</div>
         <div className="mt-1 text-xs text-muted-foreground">
-          of <span className="text-foreground">{goal}</span> kcal
+          {t("of_kcal", { goal }).split(String(goal))[0]}
+          <span className="text-foreground">{goal}</span>
+          {t("of_kcal", { goal }).split(String(goal))[1]}
         </div>
         <div className="mt-2 rounded-full bg-surface px-2.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-          {remaining > 0 ? `${remaining} left` : `${eaten - goal} over`}
+          {remaining > 0 ? `${remaining} ${t("left")}` : `${eaten - goal} ${t("over")}`}
         </div>
+
       </div>
     </div>
   );
