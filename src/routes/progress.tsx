@@ -29,6 +29,8 @@ function seedRandom(seed: number) {
 
 function ProgressPage() {
   const { entries, goals, loggedDays, bestStreak, streak } = useStore();
+  const { t } = useLanguage();
+
 
   const weekly = useMemo(() => {
     const today = new Date();
@@ -57,10 +59,11 @@ function ProgressPage() {
   const totalF = today.reduce((s, e) => s + e.fat_g, 0);
   const totalG = totalP + totalC + totalF;
   const pieData = [
-    { name: "Protein", value: totalP, color: "#3E9BFF" },
-    { name: "Carbs", value: totalC, color: "#FFD93D" },
-    { name: "Fat", value: totalF, color: "#FF6B6B" },
+    { name: t("protein"), value: totalP, color: "#3E9BFF" },
+    { name: t("carbs"), value: totalC, color: "#FFD93D" },
+    { name: t("fat"), value: totalF, color: "#FF6B6B" },
   ];
+
 
   // 30-day calendar (6 rows × 5 cols)
   const calendar = Array.from({ length: 30 }, (_, i) => {
