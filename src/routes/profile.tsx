@@ -1,9 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
+import { LangToggle } from "@/components/LangToggle";
 import { useStore } from "@/lib/store";
+import { useLanguage } from "@/lib/i18n";
 import { useEffect, useMemo, useState } from "react";
 import { Minus, Plus } from "lucide-react";
 import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
