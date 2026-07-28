@@ -28,7 +28,7 @@ export function BottomNav() {
                 <Link
                   key={it.to}
                   to={it.to}
-                  aria-label={it.label}
+                  aria-label={t(it.label)}
                   className="tap glow-lime -mt-7 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground"
                 >
                   <Icon className="h-6 w-6" strokeWidth={2.5} />
@@ -46,7 +46,7 @@ export function BottomNav() {
                   strokeWidth={active ? 2.5 : 2}
                 />
                 <span className={`text-[10px] font-medium ${active ? "text-primary" : "text-muted-foreground opacity-60"}`}>
-                  {it.label}
+                  {t(it.label)}
                 </span>
                 {active && <span className="absolute -bottom-0.5 h-[3px] w-6 rounded-full bg-primary" />}
               </Link>
