@@ -19,19 +19,26 @@ export const Route = createFileRoute("/profile")({
 });
 
 function ProfilePage() {
-  const { goals, setGoals, entries, bestStreak, startDate } = useStore();
+  const { goals, setGoals, entries, bestStreak, startDate, profile, setProfile } = useStore();
+  const { t, lang } = useLanguage();
 
-  const [name, setName] = useState(goals.name);
+  const [firstName, setFirstName] = useState(profile.firstName || goals.name);
+  const [lastName, setLastName] = useState(profile.lastName);
   const [calories, setCalories] = useState(goals.calories);
   const [p, setP] = useState(goals.protein_pct);
   const [c, setC] = useState(goals.carbs_pct);
   const [f, setF] = useState(goals.fat_pct);
 
-  // Sync local state when store hydrates
+  // Sync local state when the store hydrates / changes elsewhere
   useEffect(() => {
-    setName(goals.name); setCalories(goals.calories);
+    setFirstName(profile.firstName || goals.name);
+    setLastName(profile.lastName);
+  }, [profile.firstName, profile.lastName, goals.name]);
+
+  useEffect(() => {
+    setCalories(goals.calories);
     setP(goals.protein_pct); setC(goals.carbs_pct); setF(goals.fat_pct);
-  }, [goals.name, goals.calories, goals.protein_pct, goals.carbs_pct, goals.fat_pct]);
+  }, [goals.calories, goals.protein_pct, goals.carbs_pct, goals.fat_pct]);
 
   // Distribute remainder when one slider changes, keeping sum = 100
   function changeP(v: number) {
@@ -60,8 +67,10 @@ function ProfilePage() {
   }
 
   function save() {
-    setGoals({ name: name.trim() || "You", calories, protein_pct: p, carbs_pct: c, fat_pct: f });
-    toast.success("✅ Profile saved");
+    const fn = firstName.trim() || "You";
+    setProfile({ firstName: fn, lastName: lastName.trim(), calorieGoal: calories });
+    setGoals({ name: fn, calories, protein_pct: p, carbs_pct: c, fat_pct: f });
+    toast.success(t("profile_saved"));
   }
 
   const stats = useMemo(() => {
@@ -69,10 +78,10 @@ function ProfilePage() {
   }, [entries]);
 
   const startStr = startDate
-    ? new Date(startDate).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+    ? new Date(startDate).toLocaleDateString(lang === "fr" ? "fr-FR" : "en-US", { month: "short", day: "numeric" })
     : "—";
 
-  const initials = (name || "A").split(" ").map((s) => s[0]).join("").slice(0, 2).toUpperCase();
+  const initials = `${firstName[0] ?? "A"}${lastName[0] ?? ""}`.toUpperCase();
 
   // grams from %
   const pG = Math.round((calories * (p / 100)) / 4);
@@ -83,31 +92,39 @@ function ProfilePage() {
     <AppShell>
       <header className="flex items-center gap-4 pt-2">
         <div
-          className="flex h-16 w-16 items-center justify-center rounded-full text-xl font-bold text-foreground"
+          className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-xl font-bold text-foreground"
           style={{ border: "2px solid #A8FF3E", background: "var(--color-card)" }}
         >
           {initials}
         </div>
         <div className="min-w-0 flex-1">
           <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            placeholder={t("first_name")}
             className="w-full bg-transparent font-display text-2xl font-bold outline-none"
           />
-          <p className="text-xs text-muted-foreground">Tap to edit name</p>
+          <input
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            placeholder={t("last_name")}
+            className="w-full bg-transparent text-sm text-muted-foreground outline-none"
+          />
+          <p className="text-[10px] text-muted-foreground">{t("tap_to_edit")}</p>
         </div>
+        <LangToggle />
       </header>
 
       {/* Stats row */}
       <section className="mt-5 grid grid-cols-3 gap-2 text-center">
-        <Stat label="Start" value={startStr} />
-        <Stat label="Meals" value={`${stats.total}`} />
-        <Stat label="Best 🔥" value={`${bestStreak}d`} />
+        <Stat label={t("start")} value={startStr} />
+        <Stat label={t("meals")} value={`${stats.total}`} />
+        <Stat label={`${t("best")} 🔥`} value={`${bestStreak}d`} />
       </section>
 
       {/* Calorie goal */}
       <section className="mt-5 rounded-2xl border border-white/7 bg-white/[0.04] p-5 backdrop-blur">
-        <h2 className="font-display text-base font-semibold">Daily calorie goal</h2>
+        <h2 className="font-display text-base font-semibold">{t("daily_calorie_goal")}</h2>
         <div className="mt-3 flex items-center gap-3">
           <button onClick={() => setCalories((v) => Math.max(500, v - 50))} className="tap flex h-11 w-11 items-center justify-center rounded-xl bg-surface">
             <Minus className="h-4 w-4" />
@@ -120,7 +137,7 @@ function ProfilePage() {
               onChange={(e) => setCalories(Math.max(500, Math.min(8000, Number(e.target.value) || 0)))}
               className="w-full bg-transparent text-center font-display text-3xl font-bold tabular-nums outline-none"
             />
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">kcal / day</div>
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("per_day")}</div>
           </div>
           <button onClick={() => setCalories((v) => Math.min(8000, v + 50))} className="tap flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">
             <Plus className="h-4 w-4" strokeWidth={2.5} />
@@ -131,21 +148,22 @@ function ProfilePage() {
       {/* Macro split */}
       <section className="mt-4 rounded-2xl border border-white/7 bg-white/[0.04] p-5 backdrop-blur">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-base font-semibold">Macro split</h2>
+          <h2 className="font-display text-base font-semibold">{t("macro_split")}</h2>
           <span className="text-xs font-semibold text-primary tabular-nums">{p + c + f}%</span>
         </div>
         <div className="mt-4 flex flex-col gap-5">
-          <MacroSlider label="Protein" color="#3E9BFF" value={p} grams={pG} onChange={changeP} />
-          <MacroSlider label="Carbs" color="#FFD93D" value={c} grams={cG} onChange={changeC} />
-          <MacroSlider label="Fat" color="#FF6B6B" value={f} grams={fG} onChange={changeF} />
+          <MacroSlider label={t("protein")} color="#3E9BFF" value={p} grams={pG} onChange={changeP} />
+          <MacroSlider label={t("carbs")} color="#FFD93D" value={c} grams={cG} onChange={changeC} />
+          <MacroSlider label={t("fat")} color="#FF6B6B" value={f} grams={fG} onChange={changeF} />
         </div>
       </section>
 
       <button onClick={save} className="glow-lime tap mt-5 h-[52px] w-full rounded-2xl bg-primary font-bold text-primary-foreground">
-        Save changes
+        {t("save_changes")}
       </button>
 
       <p className="mt-6 text-center text-xs text-muted-foreground">NutriLens · Built with care</p>
+
     </AppShell>
   );
 }
