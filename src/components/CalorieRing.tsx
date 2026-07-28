@@ -1,9 +1,12 @@
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/lib/i18n";
 
 interface Props { eaten: number; goal: number; }
 
 export function CalorieRing({ eaten, goal }: Props) {
+  const { t } = useLanguage();
+
   const stroke = 14;
   const radius = 86;
   const circumference = 2 * Math.PI * radius;
