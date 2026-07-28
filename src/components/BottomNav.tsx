@@ -1,19 +1,22 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Camera, BookOpen, BarChart3, User } from "lucide-react";
+import { useLanguage, type TKey } from "@/lib/i18n";
 
-type NavItem = { to: "/" | "/diary" | "/scan" | "/progress" | "/profile"; icon: typeof Home; label: string; primary?: boolean };
+type NavItem = { to: "/" | "/diary" | "/scan" | "/progress" | "/profile"; icon: typeof Home; label: TKey; primary?: boolean };
 
 const items: NavItem[] = [
-  { to: "/", icon: Home, label: "Home" },
-  { to: "/diary", icon: BookOpen, label: "Diary" },
-  { to: "/scan", icon: Camera, label: "Scan", primary: true },
-  { to: "/progress", icon: BarChart3, label: "Stats" },
-  { to: "/profile", icon: User, label: "Profile" },
+  { to: "/", icon: Home, label: "nav_home" },
+  { to: "/diary", icon: BookOpen, label: "nav_diary" },
+  { to: "/scan", icon: Camera, label: "nav_scan", primary: true },
+  { to: "/progress", icon: BarChart3, label: "nav_stats" },
+  { to: "/profile", icon: User, label: "nav_profile" },
 ];
 
 export function BottomNav() {
   const { location } = useRouterState();
+  const { t } = useLanguage();
   return (
+
     <nav className="pointer-events-none fixed inset-x-0 bottom-0 z-40 safe-bottom">
       <div className="pointer-events-auto mx-auto max-w-md px-4">
         <div className="glass mb-1 flex items-end justify-around rounded-3xl px-2 py-2 shadow-2xl">
