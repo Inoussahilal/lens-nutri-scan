@@ -1,9 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
+import { LangToggle } from "@/components/LangToggle";
 import { useStore, dayKey } from "@/lib/store";
+import { useLanguage } from "@/lib/i18n";
 import { useMemo } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 import { Flame, BarChart3, Utensils } from "lucide-react";
+
 
 export const Route = createFileRoute("/progress")({
   head: () => ({
