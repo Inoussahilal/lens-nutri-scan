@@ -4,6 +4,8 @@ import { useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { analyzeFood } from "@/lib/nutrition.functions";
 import { useStore, type MealType } from "@/lib/store";
+import { useLanguage } from "@/lib/i18n";
+import { LangToggle } from "@/components/LangToggle";
 import { Camera, ImageIcon, X, Sparkles, ChevronDown, Lightbulb } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -44,6 +46,7 @@ function ScanPage() {
   const [showIngredients, setShowIngredients] = useState(false);
   const analyze = useServerFn(analyzeFood);
   const { addEntry } = useStore();
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   async function handleFile(file: File) {
@@ -57,7 +60,7 @@ function ScanPage() {
       setResult(res);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Could not analyze image";
-      toast.error(`❌ ${msg.includes("AI") ? msg : "Couldn't analyze — try a clearer photo"}`);
+      toast.error(`❌ ${msg.includes("AI") ? msg : t("scan_error")}`);
       setPreview(null);
     } finally {
       setLoading(false);
@@ -88,7 +91,7 @@ function ScanPage() {
       serving_size: result.serving_size,
       meal: mealMap[result.meal_type] ?? "snacks",
     });
-    toast.success(`✅ ${result.foodName} added to diary!`);
+    toast.success(`✅ ${result.foodName} ${t("added_to_diary")}`);
     navigate({ to: "/" });
   }
 
@@ -99,9 +102,12 @@ function ScanPage() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", damping: 22, stiffness: 260 }}
       >
-        <header className="pt-2">
-          <h1 className="font-display text-3xl font-bold">Scan a meal</h1>
-          <p className="text-xs text-muted-foreground">Point your camera — AI does the rest.</p>
+        <header className="flex items-start justify-between pt-2">
+          <div>
+            <h1 className="font-display text-3xl font-bold">{t("scan_title")}</h1>
+            <p className="text-xs text-muted-foreground">{t("scan_sub")}</p>
+          </div>
+          <LangToggle />
         </header>
 
         {/* Viewfinder */}
@@ -112,7 +118,7 @@ function ScanPage() {
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
                 <div className="text-6xl">🍽️</div>
-                <p className="mt-3 text-sm text-muted-foreground">Tap a button below to start</p>
+                <p className="mt-3 text-sm text-muted-foreground">{t("tap_button_start")}</p>
               </div>
             </div>
           )}
@@ -134,7 +140,7 @@ function ScanPage() {
               }} />
               <div className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-2 bg-background/60 py-3 backdrop-blur-md">
                 <Sparkles className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium">🔍 Analyzing your meal<span className="dots" /></span>
+                <span className="text-sm font-medium">🔍 {t("analyzing")}<span className="dots" /></span>
               </div>
             </>
           )}
@@ -151,10 +157,10 @@ function ScanPage() {
 
         <div className="mt-4 grid grid-cols-2 gap-3">
           <button onClick={() => cameraRef.current?.click()} className="tap glow-lime flex h-[52px] items-center justify-center gap-2 rounded-2xl bg-primary font-bold text-primary-foreground">
-            <Camera className="h-5 w-5" strokeWidth={2.5} /> Take Photo
+            <Camera className="h-5 w-5" strokeWidth={2.5} /> {t("take_photo")}
           </button>
           <button onClick={() => fileRef.current?.click()} className="tap flex h-[52px] items-center justify-center gap-2 rounded-2xl border border-white/10 bg-card font-semibold">
-            <ImageIcon className="h-5 w-5" /> Upload Image
+            <ImageIcon className="h-5 w-5" /> {t("upload_image")}
           </button>
         </div>
 
@@ -192,19 +198,19 @@ function ScanPage() {
 
               <div className="mt-5 text-center">
                 <div className="font-display text-5xl font-bold tabular-nums">{result.calories}</div>
-                <div className="mt-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">calories</div>
+                <div className="mt-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">{t("calories")}</div>
               </div>
 
               <div className="mt-5 grid grid-cols-3 gap-2">
-                <Pill color="#3E9BFF" label="Protein" value={result.protein_g} />
-                <Pill color="#FFD93D" label="Carbs" value={result.carbs_g} />
-                <Pill color="#FF6B6B" label="Fat" value={result.fat_g} />
+                <Pill color="#3E9BFF" label={t("protein")} value={result.protein_g} />
+                <Pill color="#FFD93D" label={t("carbs")} value={result.carbs_g} />
+                <Pill color="#FF6B6B" label={t("fat")} value={result.fat_g} />
               </div>
 
               {/* Health score */}
               <div className="mt-5">
                 <div className="flex items-baseline justify-between">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Health score</span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t("health_score")}</span>
                   <span className="font-display text-sm font-bold tabular-nums">{result.health_score}/10</span>
                 </div>
                 <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/5">
@@ -233,7 +239,7 @@ function ScanPage() {
                     onClick={() => setShowIngredients((v) => !v)}
                     className="flex w-full items-center justify-between px-4 py-3 text-sm font-semibold"
                   >
-                    <span>Ingredients ({result.ingredients.length})</span>
+                    <span>{t("ingredients")} ({result.ingredients.length})</span>
                     <ChevronDown className={`h-4 w-4 transition-transform ${showIngredients ? "rotate-180" : ""}`} />
                   </button>
                   <AnimatePresence initial={false}>
@@ -263,10 +269,10 @@ function ScanPage() {
 
               <div className="mt-5 grid grid-cols-[1fr_auto] gap-3">
                 <button onClick={commit} className="tap glow-lime h-[52px] rounded-2xl bg-primary font-bold text-primary-foreground">
-                  ✓ Add to Diary
+                  ✓ {t("add_to_diary")}
                 </button>
                 <button onClick={reset} className="tap h-[52px] rounded-2xl border border-white/10 px-4 font-semibold">
-                  🔄 Retake
+                  🔄 {t("retake")}
                 </button>
               </div>
             </motion.div>
