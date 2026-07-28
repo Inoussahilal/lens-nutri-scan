@@ -72,7 +72,8 @@ function DiaryPage() {
 
 
       <div className="mt-5 flex flex-col gap-5">
-        {MEAL_ORDER.map(({ key, label, emoji }) => {
+        {MEAL_ORDER.map(({ key, labelKey, emoji }) => {
+          const label = t(labelKey);
           const items = today.filter((e) => e.meal === key);
           const sub = items.reduce((s, e) => s + e.calories, 0);
           return (
@@ -85,7 +86,7 @@ function DiaryPage() {
                 </div>
                 <button
                   onClick={() => navigate({ to: "/scan" })}
-                  aria-label={`Add ${label}`}
+                  aria-label={`+ ${label}`}
                   className="tap flex h-8 w-8 items-center justify-center rounded-full bg-primary/15 text-primary"
                 >
                   <Plus className="h-4 w-4" strokeWidth={2.5} />
@@ -93,13 +94,13 @@ function DiaryPage() {
               </div>
               {items.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-white/10 bg-white/[0.03] p-4 text-center text-xs text-muted-foreground">
-                  Tap + to log {label.toLowerCase()}
+                  {t("tap_to_log")} {label.toLowerCase()}
                 </div>
               ) : (
                 <ul className="flex flex-col gap-2">
                   <AnimatePresence initial={false}>
                     {items.map((e) => (
-                      <SwipeRow key={e.id} entry={e} onDelete={() => { deleteEntry(e.id); toast("Removed"); }} />
+                      <SwipeRow key={e.id} entry={e} onDelete={() => { deleteEntry(e.id); toast(t("removed")); }} />
                     ))}
                   </AnimatePresence>
                 </ul>
@@ -111,13 +112,14 @@ function DiaryPage() {
 
       {today.length > 0 && (
         <section className="mt-6 glass rounded-2xl p-4">
-          <h3 className="mb-3 font-display text-sm font-semibold">Today's macros</h3>
+          <h3 className="mb-3 font-display text-sm font-semibold">{t("todays_macros")}</h3>
           <div className="grid grid-cols-3 gap-2 text-center">
-            <MacroSum label="Protein" value={totalP} color="#3E9BFF" />
-            <MacroSum label="Carbs" value={totalC} color="#FFD93D" />
-            <MacroSum label="Fat" value={totalF} color="#FF6B6B" />
+            <MacroSum label={t("protein")} value={totalP} color="#3E9BFF" />
+            <MacroSum label={t("carbs")} value={totalC} color="#FFD93D" />
+            <MacroSum label={t("fat")} value={totalF} color="#FF6B6B" />
           </div>
         </section>
+
       )}
     </AppShell>
   );
