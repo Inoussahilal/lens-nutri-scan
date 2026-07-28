@@ -76,17 +76,21 @@ function ProgressPage() {
 
   return (
     <AppShell>
-      <header className="pt-2">
-        <h1 className="font-display text-3xl font-bold">Your stats</h1>
-        <p className="text-xs text-muted-foreground">Last 7 days</p>
+      <header className="flex items-start justify-between pt-2">
+        <div>
+          <h1 className="font-display text-3xl font-bold">{t("your_stats")}</h1>
+          <p className="text-xs text-muted-foreground">{t("last_7_days")}</p>
+        </div>
+        <LangToggle />
       </header>
 
       {/* Weekly chart */}
       <section className="mt-5 rounded-2xl border border-white/7 bg-white/[0.04] p-4 backdrop-blur">
         <div className="flex items-baseline justify-between px-1">
-          <h2 className="font-display text-base font-semibold">Calories this week</h2>
-          <span className="text-[10px] text-muted-foreground">Goal {goals.calories}</span>
+          <h2 className="font-display text-base font-semibold">{t("calories_this_week")}</h2>
+          <span className="text-[10px] text-muted-foreground">{t("goal")} {goals.calories}</span>
         </div>
+
         <div className="mt-3 h-44">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={weekly} margin={{ top: 8, right: 4, left: 4, bottom: 0 }}>
