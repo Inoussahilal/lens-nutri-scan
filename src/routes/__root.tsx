@@ -100,10 +100,15 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <StoreProvider>
-        <Outlet />
-        <Toaster theme="dark" position="top-center" toastOptions={{ style: { background: "var(--color-card)", color: "var(--color-foreground)", border: "1px solid rgba(255,255,255,0.08)" } }} />
-      </StoreProvider>
+      <LanguageProvider>
+        <StoreProvider>
+          <AppGate>
+            <Outlet />
+          </AppGate>
+          <Toaster theme="dark" position="top-center" toastOptions={{ style: { background: "var(--color-card)", color: "var(--color-foreground)", border: "1px solid rgba(255,255,255,0.08)" } }} />
+        </StoreProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }
+
