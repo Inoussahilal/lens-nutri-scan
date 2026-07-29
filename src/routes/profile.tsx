@@ -28,6 +28,8 @@ function ProfilePage() {
   const [p, setP] = useState(goals.protein_pct);
   const [c, setC] = useState(goals.carbs_pct);
   const [f, setF] = useState(goals.fat_pct);
+  const [resetOpen, setResetOpen] = useState(false);
+
 
   // Sync local state when the store hydrates / changes elsewhere
   useEffect(() => {
