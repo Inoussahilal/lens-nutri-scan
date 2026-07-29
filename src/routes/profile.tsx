@@ -28,6 +28,8 @@ function ProfilePage() {
   const [p, setP] = useState(goals.protein_pct);
   const [c, setC] = useState(goals.carbs_pct);
   const [f, setF] = useState(goals.fat_pct);
+  const [resetOpen, setResetOpen] = useState(false);
+
 
   // Sync local state when the store hydrates / changes elsewhere
   useEffect(() => {
@@ -162,11 +164,49 @@ function ProfilePage() {
         {t("save_changes")}
       </button>
 
+      <button
+        onClick={() => setResetOpen(true)}
+        className="tap mt-4 w-full text-center text-xs font-semibold"
+        style={{ color: "#FF6B6B" }}
+      >
+        {t("reset_app_data")}
+      </button>
+
+      {resetOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6" onClick={() => setResetOpen(false)}>
+          <div
+            className="w-full max-w-xs rounded-2xl border border-white/10 bg-card p-5 text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-sm text-foreground">{t("reset_confirm_msg")}</p>
+            <div className="mt-5 flex gap-2">
+              <button
+                onClick={() => setResetOpen(false)}
+                className="tap h-11 flex-1 rounded-xl bg-surface text-sm font-semibold"
+              >
+                {t("cancel")}
+              </button>
+              <button
+                onClick={() => {
+                  try { localStorage.clear(); } catch {}
+                  window.location.reload();
+                }}
+                className="tap h-11 flex-1 rounded-xl text-sm font-bold text-white"
+                style={{ background: "#FF6B6B" }}
+              >
+                {t("confirm")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <p className="mt-6 text-center text-xs text-muted-foreground">NutriLens · Built with care</p>
 
     </AppShell>
   );
 }
+
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
