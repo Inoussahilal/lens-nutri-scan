@@ -189,6 +189,11 @@ const fr: Record<TKey, string> = {
   start: "DÉBUT",
   profile_saved: "✅ Profil sauvegardé !",
   per_day: "kcal / jour",
+  reset_app_data: "🗑 Réinitialiser les données",
+  reset_confirm_msg: "Cela supprimera toutes vos données et redémarrera l'application. Êtes-vous sûr ?",
+  cancel: "Annuler",
+  confirm: "Confirmer",
+
   trial_ended: "Votre essai gratuit est terminé",
   subscribe_sub: "Abonnez-vous pour continuer",
   per_month: "/ mois",
