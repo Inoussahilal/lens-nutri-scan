@@ -77,6 +77,11 @@ const en = {
   start: "START",
   profile_saved: "✅ Profile saved!",
   per_day: "kcal / day",
+  reset_app_data: "🗑 Reset app data",
+  reset_confirm_msg: "This will delete all your data and restart the app. Are you sure?",
+  cancel: "Cancel",
+  confirm: "Confirm",
+
   // paywall
   trial_ended: "Your free trial has ended",
   subscribe_sub: "Subscribe to continue tracking your nutrition",
