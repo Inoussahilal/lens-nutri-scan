@@ -454,7 +454,7 @@ function CoachPage() {
         )}
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md px-4 pb-[104px] safe-bottom">
+      <div className="fixed inset-x-0 bottom-[100px] z-40 mx-auto max-w-md px-4">
         <div
           className="flex items-center gap-2 rounded-full p-1.5"
           style={{ background: "#14141C", border: "1px solid rgba(255,255,255,0.08)" }}
