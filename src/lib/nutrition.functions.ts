@@ -4,6 +4,7 @@ import { z } from "zod";
 const InputSchema = z.object({
   imageBase64: z.string().min(10).max(8_000_000),
   mediaType: z.enum(["image/jpeg", "image/png", "image/webp"]).default("image/jpeg"),
+  country: z.string().max(60).optional(),
 });
 
 export const analyzeFood = createServerFn({ method: "POST" })
@@ -12,7 +13,11 @@ export const analyzeFood = createServerFn({ method: "POST" })
     const apiKey = process.env.LOVABLE_API_KEY;
     if (!apiKey) throw new Error("AI service not configured");
 
-    const prompt = `You are a professional nutritionist AI. Analyze this food photo.
+    const countryNote = data.country
+      ? `\nUser is based in ${data.country}. Prioritize dishes and ingredients that are commonly available and affordable in ${data.country}. For West African countries, include local dishes like riz sauce, alloco, gari, pâte, fufu, thiéboudienne, yassa etc. when appropriate. Always balance local dishes with international options.\n`
+      : "";
+
+    const prompt = `You are a professional nutritionist AI. Analyze this food photo.${countryNote}
 Return ONLY valid JSON, no markdown, no explanation:
 {
   "foodName": "descriptive meal name",

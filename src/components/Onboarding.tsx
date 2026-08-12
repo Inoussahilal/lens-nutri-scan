@@ -14,6 +14,9 @@ export function Onboarding() {
   const [lastName, setLastName] = useState("");
   const [calorieGoal, setCalorieGoal] = useState("2000");
   const [activity, setActivity] = useState<ActivityLevel>("moderate");
+  const [country, setCountry] = useState("");
+  const [otherCountry, setOtherCountry] = useState("");
+  const [showOther, setShowOther] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const levels: { key: ActivityLevel; labelKey: "sedentary" | "moderate" | "active" | "very_active"; emoji: string }[] = [
@@ -23,7 +26,26 @@ export function Onboarding() {
     { key: "very_active", labelKey: "very_active", emoji: "🔥" },
   ];
 
+  const countries = [
+    { flag: "🇧🇯", name: "Bénin" },
+    { flag: "🇸🇳", name: "Sénégal" },
+    { flag: "🇨🇮", name: "Côte d'Ivoire" },
+    { flag: "🇹🇬", name: "Togo" },
+    { flag: "🇨🇲", name: "Cameroun" },
+    { flag: "🇫🇷", name: "France" },
+    { flag: "🇺🇸", name: "USA" },
+  ];
+
+  const resolvedCountry = showOther ? otherCountry.trim() : country;
+
   function next() {
+    if (step === 2) {
+      if (!resolvedCountry) {
+        setError(t("country_required"));
+        return;
+      }
+      setError(null);
+    }
     if (step === 1) {
       if (!firstName.trim() || !lastName.trim() || !Number(calorieGoal)) {
         setError(t("required"));
@@ -40,6 +62,7 @@ export function Onboarding() {
       lastName: lastName.trim(),
       calorieGoal: Math.max(800, Math.min(8000, Number(calorieGoal) || 2000)),
       activityLevel: activity,
+      country: resolvedCountry,
     });
   }
 
@@ -48,7 +71,7 @@ export function Onboarding() {
       <div className="mx-auto flex min-h-dvh max-w-md flex-col px-6 pb-10 safe-top">
         <div className="flex items-center justify-between pt-2">
           <div className="flex gap-1.5">
-            {[0, 1, 2].map((i) => (
+            {[0, 1, 2, 3].map((i) => (
               <span
                 key={i}
                 className="h-1.5 rounded-full transition-all"
@@ -121,6 +144,44 @@ export function Onboarding() {
             )}
 
             {step === 2 && (
+              <div className="flex flex-1 flex-col justify-center">
+                <div className="text-5xl">🌍</div>
+                <h1 className="mt-5 font-display text-2xl font-bold leading-snug">{t("country_q")}</h1>
+                <div className="mt-6 flex flex-wrap gap-2">
+                  {countries.map((c) => {
+                    const active = !showOther && country === c.name;
+                    return (
+                      <button
+                        key={c.name}
+                        onClick={() => { setShowOther(false); setCountry(c.name); setError(null); }}
+                        className={`tap rounded-full border px-4 py-2.5 text-sm font-semibold ${
+                          active ? "border-primary bg-primary/10 text-primary" : "border-white/10 bg-white/[0.04]"
+                        }`}
+                      >
+                        <span className="mr-1.5">{c.flag}</span>
+                        {c.name}
+                      </button>
+                    );
+                  })}
+                  <button
+                    onClick={() => { setShowOther(true); setCountry(""); setError(null); }}
+                    className={`tap rounded-full border px-4 py-2.5 text-sm font-semibold ${
+                      showOther ? "border-primary bg-primary/10 text-primary" : "border-white/10 bg-white/[0.04]"
+                    }`}
+                  >
+                    {t("country_other")}
+                  </button>
+                </div>
+                {showOther && (
+                  <div className="mt-4">
+                    <Field value={otherCountry} onChange={setOtherCountry} placeholder={t("country_other_ph")} />
+                  </div>
+                )}
+                {error && <p className="mt-4 text-xs font-medium text-destructive">{error}</p>}
+              </div>
+            )}
+
+            {step === 3 && (
               <div className="flex flex-1 flex-col items-center justify-center text-center">
                 <div className="text-6xl">🎉</div>
                 <h1 className="mt-6 font-display text-3xl font-bold leading-tight">{t("trial_starts")}</h1>
@@ -139,12 +200,12 @@ export function Onboarding() {
 
         <div className="mt-8">
           <button
-            onClick={step === 2 ? finish : next}
+            onClick={step === 3 ? finish : next}
             className="glow-lime tap h-[54px] w-full rounded-2xl bg-primary font-bold text-primary-foreground"
           >
-            {step === 0 ? t("get_started") : step === 1 ? t("continue") : t("start_trial")}
+            {step === 0 ? t("get_started") : step < 3 ? t("continue") : t("start_trial")}
           </button>
-          {step === 2 && <p className="mt-3 text-center text-xs text-muted-foreground">{t("no_payment")}</p>}
+          {step === 3 && <p className="mt-3 text-center text-xs text-muted-foreground">{t("no_payment")}</p>}
         </div>
       </div>
     </div>
