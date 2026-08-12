@@ -33,6 +33,7 @@ export interface Profile {
   lastName: string;
   calorieGoal: number;
   activityLevel: ActivityLevel;
+  country: string;
   trialStartDate: number;
   isSubscribed: boolean;
 }
@@ -50,7 +51,7 @@ interface StoreState {
   hydrated: boolean;
   profile: Profile;
   setProfile: (p: Partial<Profile>) => void;
-  completeOnboarding: (p: { firstName: string; lastName: string; calorieGoal: number; activityLevel: ActivityLevel }) => void;
+  completeOnboarding: (p: { firstName: string; lastName: string; calorieGoal: number; activityLevel: ActivityLevel; country: string }) => void;
   trialDaysLeft: number;
   isPaywalled: boolean;
 }
@@ -68,6 +69,7 @@ const defaultProfile: Profile = {
   lastName: "",
   calorieGoal: 2500,
   activityLevel: "moderate",
+  country: "",
   trialStartDate: 0,
   isSubscribed: false,
 };
