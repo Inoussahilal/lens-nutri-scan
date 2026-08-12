@@ -220,7 +220,7 @@ function CoachPage() {
     meals: 3,
     diet: "all",
   });
-  const [booted, setBooted] = useState(false);
+  const bootedRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const name = profile.firstName || "👋";
@@ -248,8 +248,8 @@ function CoachPage() {
 
   // boot: restore saved plan or start conversation
   useEffect(() => {
-    if (booted) return;
-    setBooted(true);
+    if (bootedRef.current) return;
+    bootedRef.current = true;
     let saved: MealPlan | null = null;
     try {
       const raw = localStorage.getItem(PLAN_KEY);
@@ -265,7 +265,7 @@ function CoachPage() {
       startFlow();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [booted]);
+  }, []);
 
   async function runGeneration(next: typeof answers, mode: "plan" | "alternative", ingredients?: string) {
     setChips([]);
