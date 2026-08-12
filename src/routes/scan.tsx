@@ -45,7 +45,7 @@ function ScanPage() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [showIngredients, setShowIngredients] = useState(false);
   const analyze = useServerFn(analyzeFood);
-  const { addEntry } = useStore();
+  const { addEntry, profile } = useStore();
   const { t } = useLanguage();
   const navigate = useNavigate();
 
@@ -56,7 +56,7 @@ function ScanPage() {
     setLoading(true);
     try {
       const { data, mediaType } = await fileToBase64(file);
-      const res = await analyze({ data: { imageBase64: data, mediaType } });
+      const res = await analyze({ data: { imageBase64: data, mediaType, country: profile.country || undefined } });
       setResult(res);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Could not analyze image";
