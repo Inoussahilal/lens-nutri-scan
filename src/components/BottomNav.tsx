@@ -1,16 +1,18 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Camera, BookOpen, BarChart3, User } from "lucide-react";
+import { Home, Camera, BookOpen, BarChart3, User, Bot } from "lucide-react";
 import { useLanguage, type TKey } from "@/lib/i18n";
 
-type NavItem = { to: "/" | "/diary" | "/scan" | "/progress" | "/profile"; icon: typeof Home; label: TKey; primary?: boolean };
+type NavItem = { to: "/" | "/diary" | "/scan" | "/progress" | "/coach" | "/profile"; icon: typeof Home; label: TKey; primary?: boolean };
 
 const items: NavItem[] = [
   { to: "/", icon: Home, label: "nav_home" },
   { to: "/diary", icon: BookOpen, label: "nav_diary" },
   { to: "/scan", icon: Camera, label: "nav_scan", primary: true },
   { to: "/progress", icon: BarChart3, label: "nav_stats" },
+  { to: "/coach", icon: Bot, label: "nav_coach" },
   { to: "/profile", icon: User, label: "nav_profile" },
 ];
+
 
 export function BottomNav() {
   const { location } = useRouterState();
