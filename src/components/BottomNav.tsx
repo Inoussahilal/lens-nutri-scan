@@ -41,7 +41,7 @@ export function BottomNav() {
               <Link
                 key={it.to}
                 to={it.to}
-                className="tap relative flex min-h-[44px] min-w-[56px] flex-col items-center gap-0.5 rounded-xl px-3 py-2"
+                className="tap relative flex min-h-[44px] min-w-[44px] flex-col items-center gap-0.5 rounded-xl px-2 py-2"
               >
                 <Icon
                   className={`h-5 w-5 transition-all ${active ? "text-primary scale-110" : "text-muted-foreground opacity-60"}`}
