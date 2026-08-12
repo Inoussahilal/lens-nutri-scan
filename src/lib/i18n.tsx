@@ -122,7 +122,35 @@ const en = {
   after_3_days: "After 3 days: $10/month to continue",
   start_trial: "Start Free Trial",
   no_payment: "No payment required now",
+  // coach
+  nav_coach: "Coach",
+  coach_header: "🤖 Nutrition Coach",
+  coach_new_plan: "🔄 New plan",
+  coach_welcome_back: "Welcome back {name}! Here's your current plan. Tap 🔄 to generate a new one.",
+  coach_intro: "Hello {name} 👋 I'm your AI nutrition coach. I'll create a personalized meal plan for the whole month to help you reach your goals!",
+  coach_q_calories: "What is your daily calorie goal? (e.g. 2500 kcal/day)",
+  coach_q_country: "Which country are you based in? This will help me suggest meals adapted to ingredients available in your area 🌍",
+  coach_q_meals: "How many meals do you want to eat per day to reach this goal?",
+  coach_q_diet: "Perfect! Do you prefer varied international dishes or do you have specific dietary constraints?",
+  coach_diet_all: "All types",
+  coach_diet_nopork: "No pork",
+  coach_diet_veg: "Vegetarian",
+  coach_diet_gluten: "Gluten-free",
+  coach_meals_n: "{n} meals",
+  coach_plan_title: "30-day Plan",
+  coach_plan_ready: "✅ Here's your meal plan for the next 30 days! You can browse day by day below 👇",
+  coach_alt_ready: "✅ Here's a new plan adapted to your ingredients!",
+  coach_add_to_diary: "➕ Add to Diary",
+  coach_cant_make: "❌ I can't make this dish",
+  coach_ingredients_q: "No problem! What ingredients do you have regularly available?",
+  coach_input_ph: "Type your answer...",
+  coach_generating: "Generating your plan...",
+  coach_day: "Day",
+  coach_error: "❌ Generation error. Please try again in a few seconds.",
+  coach_added: "added to today's diary!",
+  coach_ingredients: "Ingredients",
 };
+
 
 export type TKey = keyof typeof en;
 
