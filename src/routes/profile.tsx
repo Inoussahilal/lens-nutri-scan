@@ -189,15 +189,24 @@ function ProfilePage() {
               <button
                 onClick={() => {
                   const handleReset = () => {
-                    // Clear absolutely everything in localStorage
+                    // Save subscription data before clearing
+                    const isSubscribed = localStorage.getItem("nutrilens_is_subscribed");
+                    const subscriptionDate = localStorage.getItem("nutrilens_subscription_date");
+                    const userPhone = localStorage.getItem("nutrilens_user_phone");
+
                     localStorage.clear();
-                    // Also clear sessionStorage just in case
                     sessionStorage.clear();
-                    // Force hard reload to clear all React state in memory
-                    window.location.href = window.location.origin;
+
+                    if (isSubscribed) localStorage.setItem("nutrilens_is_subscribed", isSubscribed);
+                    if (subscriptionDate) localStorage.setItem("nutrilens_subscription_date", subscriptionDate);
+                    if (userPhone) localStorage.setItem("nutrilens_user_phone", userPhone);
+
+                    // Force complete page reload to reset ALL React state
+                    window.location.replace(window.location.origin);
                   };
                   handleReset();
                 }}
+
                 className="tap h-11 flex-1 rounded-xl text-sm font-bold text-white"
                 style={{ background: "#FF6B6B" }}
               >
