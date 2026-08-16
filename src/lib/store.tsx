@@ -34,7 +34,7 @@ export interface Profile {
   calorieGoal: number;
   activityLevel: ActivityLevel;
   country: string;
-  trialStartDate: number;
+  freeScansUsed: number;
   isSubscribed: boolean;
 }
 
@@ -52,8 +52,9 @@ interface StoreState {
   profile: Profile;
   setProfile: (p: Partial<Profile>) => void;
   completeOnboarding: (p: { firstName: string; lastName: string; calorieGoal: number; activityLevel: ActivityLevel; country: string }) => void;
-  trialDaysLeft: number;
+  freeScansLeft: number;
   isPaywalled: boolean;
+  registerScan: () => void;
 }
 
 const StoreCtx = createContext<StoreState | null>(null);
@@ -61,7 +62,7 @@ const StoreCtx = createContext<StoreState | null>(null);
 const STORAGE_KEY = "nutrilens.v2";
 const PROFILE_KEY = "nutrilens.profile.v1";
 
-export const TRIAL_DAYS = 3;
+export const FREE_SCANS = 10;
 
 const defaultProfile: Profile = {
   onboarded: false,
@@ -70,7 +71,7 @@ const defaultProfile: Profile = {
   calorieGoal: 2500,
   activityLevel: "moderate",
   country: "",
-  trialStartDate: 0,
+  freeScansUsed: 0,
   isSubscribed: false,
 };
 
@@ -143,12 +144,6 @@ function seedDemoEntries(): FoodEntry[] {
   ];
 }
 
-function daysBetween(a: number, b: number) {
-  const d1 = new Date(a); d1.setHours(0, 0, 0, 0);
-  const d2 = new Date(b); d2.setHours(0, 0, 0, 0);
-  return Math.floor((d2.getTime() - d1.getTime()) / 86400000);
-}
-
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [entries, setEntries] = useState<FoodEntry[]>([]);
   const [goals, setGoalsState] = useState<Goals>(defaultGoals);
@@ -208,9 +203,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<StoreState>(() => {
     const loggedDays = new Set(entries.map((e) => dayKey(e.loggedAt)));
-    const elapsed = profile.trialStartDate ? daysBetween(profile.trialStartDate, Date.now()) : 0;
-    const trialDaysLeft = Math.max(0, TRIAL_DAYS - elapsed);
-    const isPaywalled = profile.onboarded && !profile.isSubscribed && trialDaysLeft <= 0;
+    const freeScansLeft = Math.max(0, FREE_SCANS - (profile.freeScansUsed || 0));
+    const isPaywalled = profile.onboarded && !profile.isSubscribed && freeScansLeft <= 0;
 
     // Profile is the source of truth for the user's name and calorie goal
     const mergedGoals: Goals = profile.onboarded
@@ -246,13 +240,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           ...prev,
           ...p,
           onboarded: true,
-          trialStartDate: prev.trialStartDate || Date.now(),
         }));
         setGoalsState((prev) => ({ ...prev, name: p.firstName, calories: p.calorieGoal }));
         setStartDate((prev) => prev || Date.now());
       },
-      trialDaysLeft,
+      freeScansLeft,
       isPaywalled,
+      registerScan: () =>
+        setProfileState((prev) => ({ ...prev, freeScansUsed: (prev.freeScansUsed || 0) + 1 })),
     };
   }, [entries, goals, bestStreak, startDate, hydrated, profile]);
 

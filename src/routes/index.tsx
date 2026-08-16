@@ -23,7 +23,7 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
-  const { goals, streak, entries, hydrated, profile, trialDaysLeft } = useStore();
+  const { goals, streak, entries, hydrated, profile, freeScansLeft } = useStore();
   const { t, lang } = useLanguage();
   const totals = todayTotals(entries);
 
@@ -66,9 +66,17 @@ function HomePage() {
         </div>
       </header>
 
-      {!profile.isSubscribed && trialDaysLeft > 0 && (
-        <div className="mt-4 rounded-2xl border border-primary/30 bg-primary/10 px-4 py-2.5 text-center text-xs font-semibold text-primary">
-          {t("trial_banner", { n: trialDaysLeft })}
+      {hydrated && !profile.isSubscribed && (
+        <div
+          className={`mt-4 rounded-2xl border px-4 py-2.5 text-center text-xs font-semibold ${
+            freeScansLeft <= 3
+              ? "border-[#FF6B6B]/40 bg-[#FF6B6B]/10 text-[#FF6B6B]"
+              : "border-primary/30 bg-primary/10 text-primary"
+          }`}
+        >
+          {freeScansLeft <= 3
+            ? t("scans_warning", { n: freeScansLeft })
+            : t("scans_remaining", { n: freeScansLeft })}
         </div>
       )}
 
