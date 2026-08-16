@@ -109,41 +109,6 @@ function computeStreak(days: Set<string>): number {
   return streak;
 }
 
-function seedDemoEntries(): FoodEntry[] {
-  const now = new Date();
-  const at = (h: number, m = 0) => {
-    const d = new Date(now);
-    d.setHours(h, m, 0, 0);
-    return d.getTime();
-  };
-  return [
-    {
-      id: crypto.randomUUID(),
-      foodName: "Oatmeal with Banana",
-      emoji: "🥣",
-      calories: 380, protein_g: 12, carbs_g: 68, fat_g: 7,
-      serving_size: "1 bowl ~300g",
-      meal: "breakfast", loggedAt: at(8, 15),
-    },
-    {
-      id: crypto.randomUUID(),
-      foodName: "Grilled Chicken & Rice",
-      emoji: "🍗",
-      calories: 520, protein_g: 45, carbs_g: 52, fat_g: 8,
-      serving_size: "1 plate ~400g",
-      meal: "lunch", loggedAt: at(13, 5),
-    },
-    {
-      id: crypto.randomUUID(),
-      foodName: "Greek Yogurt",
-      emoji: "🥛",
-      calories: 150, protein_g: 15, carbs_g: 12, fat_g: 3,
-      serving_size: "1 cup ~170g",
-      meal: "snacks", loggedAt: at(16, 30),
-    },
-  ];
-}
-
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [entries, setEntries] = useState<FoodEntry[]>([]);
   const [goals, setGoalsState] = useState<Goals>(defaultGoals);
