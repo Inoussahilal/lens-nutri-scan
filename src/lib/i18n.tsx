@@ -79,7 +79,7 @@ const en = {
   profile_saved: "✅ Profile saved!",
   per_day: "kcal / day",
   reset_app_data: "🗑 Reset app data",
-  reset_confirm_msg: "This will delete all your data and restart the app. Are you sure?",
+  reset_confirm_msg: "All your data will be permanently deleted. You will need to register again. Continue?",
   cancel: "Cancel",
   confirm: "Confirm",
 
@@ -224,7 +224,7 @@ const fr: Record<TKey, string> = {
   profile_saved: "✅ Profil sauvegardé !",
   per_day: "kcal / jour",
   reset_app_data: "🗑 Réinitialiser les données",
-  reset_confirm_msg: "Cela supprimera toutes vos données et redémarrera l'application. Êtes-vous sûr ?",
+  reset_confirm_msg: "Toutes tes données seront supprimées définitivement. Tu devras te réinscrire. Continuer ?",
   cancel: "Annuler",
   confirm: "Confirmer",
 

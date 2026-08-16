@@ -188,8 +188,15 @@ function ProfilePage() {
               </button>
               <button
                 onClick={() => {
-                  try { localStorage.clear(); } catch {}
-                  window.location.reload();
+                  const handleReset = () => {
+                    // Clear absolutely everything in localStorage
+                    localStorage.clear();
+                    // Also clear sessionStorage just in case
+                    sessionStorage.clear();
+                    // Force hard reload to clear all React state in memory
+                    window.location.href = window.location.origin;
+                  };
+                  handleReset();
                 }}
                 className="tap h-11 flex-1 rounded-xl text-sm font-bold text-white"
                 style={{ background: "#FF6B6B" }}
