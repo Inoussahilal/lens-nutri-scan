@@ -153,7 +153,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [profile, setProfileState] = useState<Profile>(defaultProfile);
 
   useEffect(() => {
-    let loaded = false;
+    // Always read fresh from localStorage; never fall back to demo data.
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
@@ -162,21 +162,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (parsed.goals) setGoalsState({ ...defaultGoals, ...parsed.goals });
         if (typeof parsed.bestStreak === "number") setBestStreakState(parsed.bestStreak);
         if (typeof parsed.startDate === "number") setStartDate(parsed.startDate);
-        loaded = true;
+      } else {
+        setEntries([]);
+        setGoalsState(defaultGoals);
+        setBestStreakState(0);
+        setStartDate(Date.now());
       }
     } catch {}
     try {
       const rawP = localStorage.getItem(PROFILE_KEY);
-      if (rawP) setProfileState({ ...defaultProfile, ...JSON.parse(rawP) });
+      const base = rawP ? { ...defaultProfile, ...JSON.parse(rawP) } : { ...defaultProfile };
+      // Subscription status survives a data reset
+      if (localStorage.getItem("nutrilens_is_subscribed") === "true") base.isSubscribed = true;
+      setProfileState(base);
     } catch {}
-    if (!loaded) {
-      const seeded = seedDemoEntries();
-      setEntries(seeded);
-      setStartDate(Date.now());
-      setBestStreakState(1);
-    }
     setHydrated(true);
   }, []);
+
 
   // Recompute best streak whenever entries change
   useEffect(() => {
