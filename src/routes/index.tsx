@@ -61,6 +61,11 @@ function HomePage() {
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          {hydrated && profile.isSubscribed && (
+            <span className="rounded-full bg-primary/15 px-2.5 py-1 text-[10px] font-bold text-primary">
+              {t("pro_active")}
+            </span>
+          )}
           <LangToggle />
           <StreakBadge days={hydrated ? streak : 0} />
         </div>

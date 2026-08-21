@@ -1,39 +1,49 @@
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, X } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { useStore } from "@/lib/store";
 import { useLanguage } from "@/lib/i18n";
 import { LangToggle } from "./LangToggle";
 import { toast } from "sonner";
+import { openKkiapayPayment, isBenin, type KkiapaySuccess } from "@/utils/payment";
 
-type Method = { id: string; labelKey: "pay_mtn" | "pay_moov" | "pay_celtiis"; emoji: string };
-
-const METHODS: Method[] = [
-  { id: "mtn", labelKey: "pay_mtn", emoji: "🟡" },
-  { id: "moov", labelKey: "pay_moov", emoji: "🔵" },
-  { id: "celtiis", labelKey: "pay_celtiis", emoji: "🟢" },
-];
+const WHATSAPP_NUMBER = "22900000000"; // replace with the real support number
+const WHATSAPP_DISPLAY = "+229 XX XX XX XX";
 
 export function Paywall() {
   const { t } = useLanguage();
   const { profile, setProfile } = useStore();
-  const [method, setMethod] = useState<Method | null>(null);
-  const [verifying, setVerifying] = useState(false);
+  const navigate = useNavigate();
+  const [intlOpen, setIntlOpen] = useState(false);
+  const [paying, setPaying] = useState(false);
 
-  const reference = useMemo(
-    () => `NL-${(profile.firstName || "USER").slice(0, 4).toUpperCase()}-${String(Date.now()).slice(-5)}`,
-    [profile.firstName],
-  );
+  const benin = useMemo(() => isBenin(profile.country), [profile.country]);
 
-  function confirmPaid() {
-    setVerifying(true);
-    toast.success(t("payment_received"));
-    setTimeout(() => {
-      setProfile({ isSubscribed: true });
-      setVerifying(false);
-      setMethod(null);
-      toast.success(t("sub_activated"));
-    }, 2500);
+  function handleKkiapay() {
+    const phone = (typeof window !== "undefined" && localStorage.getItem("nutrilens_user_phone")) || "";
+    setPaying(true);
+    openKkiapayPayment(
+      profile.firstName,
+      phone,
+      (response: KkiapaySuccess) => {
+        try {
+          localStorage.setItem("nutrilens_is_subscribed", "true");
+          localStorage.setItem("nutrilens_subscription_date", new Date().toISOString());
+          if (response?.transactionId) {
+            localStorage.setItem("nutrilens_transaction_id", String(response.transactionId));
+          }
+        } catch {}
+        setPaying(false);
+        setProfile({ isSubscribed: true });
+        toast.success(t("kkiapay_success"));
+        navigate({ to: "/" });
+      },
+      () => {
+        setPaying(false);
+        toast.error(t("kkiapay_failed"));
+      },
+    );
   }
 
   return (
@@ -50,7 +60,9 @@ export function Paywall() {
 
           <div className="mt-7 rounded-3xl border border-primary/40 bg-primary/[0.07] p-6">
             <div className="flex items-baseline justify-center gap-1">
-              <span className="font-display text-5xl font-bold text-primary">$10</span>
+              <span className="font-display text-5xl font-bold text-primary">
+                {benin ? "6 000 F" : "$9.99"}
+              </span>
               <span className="text-sm text-muted-foreground">{t("per_month")}</span>
             </div>
             <ul className="mt-5 flex flex-col gap-3 text-left">
@@ -66,30 +78,46 @@ export function Paywall() {
           </div>
 
           <div className="mt-6 flex flex-col gap-3">
-            {METHODS.map((m) => (
+            {benin ? (
               <button
-                key={m.id}
-                onClick={() => setMethod(m)}
-                className="tap flex h-[54px] items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.05] font-semibold"
+                onClick={handleKkiapay}
+                disabled={paying}
+                className="glow-lime tap w-full font-bold disabled:opacity-60"
+                style={{
+                  height: 56,
+                  borderRadius: 14,
+                  background: "#A8FF3E",
+                  color: "#0A0A0F",
+                }}
               >
-                <span>{m.emoji}</span> {t(m.labelKey)}
+                {paying ? t("verifying") : t("pay_kkiapay")}
               </button>
-            ))}
+            ) : (
+              <button
+                onClick={() => setIntlOpen(true)}
+                className="tap w-full rounded-2xl border border-primary/50 bg-card font-bold text-foreground"
+                style={{ height: 56, borderRadius: 14 }}
+              >
+                {t("pay_intl")}
+              </button>
+            )}
           </div>
+
+          <div id="kkiapay-container" className="hidden" />
 
           <p className="mt-4 text-xs text-muted-foreground">{t("activation_note")}</p>
         </div>
       </div>
 
       <AnimatePresence>
-        {method && (
+        {intlOpen && (
           <>
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
-              onClick={() => !verifying && setMethod(null)}
+              onClick={() => setIntlOpen(false)}
             />
             <motion.div
               initial={{ y: "100%" }}
@@ -99,27 +127,25 @@ export function Paywall() {
               className="fixed inset-x-0 bottom-0 z-50 mx-auto max-w-md rounded-t-3xl border-t border-white/10 bg-card p-6 safe-bottom"
             >
               <div className="flex items-start justify-between">
-                <h2 className="font-display text-xl font-bold">
-                  {method.emoji} {t(method.labelKey)}
-                </h2>
-                <button onClick={() => !verifying && setMethod(null)} aria-label="Close" className="tap rounded-full bg-white/8 p-2">
+                <h2 className="font-display text-xl font-bold">{t("intl_modal_title")}</h2>
+                <button onClick={() => setIntlOpen(false)} aria-label="Close" className="tap rounded-full bg-white/8 p-2">
                   <X className="h-4 w-4" />
                 </button>
               </div>
-              <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
-                {t("pay_instructions", { ref: reference })}
+              <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+                {t("intl_modal_msg")}
               </p>
-              <div className="mt-4 rounded-2xl bg-white/[0.05] p-4 text-center">
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">REF</div>
-                <div className="mt-1 font-display text-lg font-bold tracking-wide text-primary">{reference}</div>
+              <div className="mt-3 text-center font-display text-lg font-bold tracking-wide text-primary">
+                {WHATSAPP_DISPLAY}
               </div>
-              <button
-                onClick={confirmPaid}
-                disabled={verifying}
-                className="glow-lime tap mt-5 h-[54px] w-full rounded-2xl bg-primary font-bold text-primary-foreground disabled:opacity-60"
+              <a
+                href={`https://wa.me/${WHATSAPP_NUMBER}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="glow-lime tap mt-5 flex h-[54px] w-full items-center justify-center rounded-2xl bg-primary font-bold text-primary-foreground"
               >
-                {verifying ? t("verifying") : t("i_have_paid")}
-              </button>
+                {t("whatsapp_btn")}
+              </a>
             </motion.div>
           </>
         )}
