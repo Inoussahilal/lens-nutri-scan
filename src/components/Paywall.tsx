@@ -8,8 +8,8 @@ import { LangToggle } from "./LangToggle";
 import { toast } from "sonner";
 import { openKkiapayPayment, isBenin, type KkiapaySuccess } from "@/utils/payment";
 
-const WHATSAPP_NUMBER = "2296754848";
-const WHATSAPP_DISPLAY = "+229 6754848";
+const WHATSAPP_NUMBER = "22967354848";
+const WHATSAPP_DISPLAY = "+229 67 35 48 48";
 
 export function Paywall() {
   const { t } = useLanguage();
