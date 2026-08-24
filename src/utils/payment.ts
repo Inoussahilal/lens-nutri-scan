@@ -25,6 +25,7 @@ export const openKkiapayPayment = (
   userPhone?: string,
   onSuccess?: (response: KkiapaySuccess) => void,
   onFailed?: (error: unknown) => void,
+  amount: number = KKIAPAY_AMOUNT_FCFA,
 ) => {
   if (!isKkiapayReady()) {
     onFailed?.(new Error("KkiaPay SDK not loaded"));
@@ -32,7 +33,7 @@ export const openKkiapayPayment = (
   }
 
   window.openKkiapay!({
-    amount: KKIAPAY_AMOUNT_FCFA,
+    amount,
     apikey: KKIAPAY_PUBLIC_KEY,
     sandbox: KKIAPAY_SANDBOX,
     phone: userPhone || "",
