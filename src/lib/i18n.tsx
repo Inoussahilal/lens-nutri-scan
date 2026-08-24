@@ -158,6 +158,17 @@ const en = {
   coach_error: "❌ Generation error. Please try again in a few seconds.",
   coach_added: "added to today's diary!",
   coach_ingredients: "Ingredients",
+  // promo & admin
+  promo_title: "Do you have a promo code?",
+  promo_ph: "Enter your promo code",
+  promo_apply: "Apply",
+  promo_success: "✅ Code applied! You get the 9.99$/month rate",
+  promo_invalid: "❌ Invalid code. Check and try again.",
+  promo_first_month: "First month 10.99$, then 9.99$/month",
+  promo_with: "9.99$/month with your promo code",
+  admin_badge: "🛡️ Admin",
+  maintenance_title: "Maintenance in progress",
+  maintenance_msg: "NutriSnap is briefly unavailable. Please come back soon.",
 };
 
 
@@ -308,6 +319,16 @@ const fr: Record<TKey, string> = {
   coach_error: "❌ Erreur de génération. Réessaie dans quelques secondes.",
   coach_added: "ajouté au journal !",
   coach_ingredients: "Ingrédients",
+  promo_title: "Tu as un code promo ?",
+  promo_ph: "Entre ton code promo",
+  promo_apply: "Appliquer",
+  promo_success: "✅ Code appliqué ! Tu bénéficies du tarif 9,99 $/mois",
+  promo_invalid: "❌ Code invalide. Vérifie et réessaie.",
+  promo_first_month: "Premier mois à 10,99 $, puis 9,99 $/mois",
+  promo_with: "9,99 $/mois avec ton code promo",
+  admin_badge: "🛡️ Admin",
+  maintenance_title: "Maintenance en cours",
+  maintenance_msg: "NutriSnap est momentanément indisponible. Reviens bientôt.",
 };
 
 const dicts: Record<Lang, Record<TKey, string>> = { fr, en };
