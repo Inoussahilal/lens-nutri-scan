@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { isAdminLogged } from "@/utils/promoCodes";
 
 export type MealType = "breakfast" | "lunch" | "dinner" | "snacks";
 
@@ -55,6 +56,7 @@ interface StoreState {
   freeScansLeft: number;
   isPaywalled: boolean;
   registerScan: () => void;
+  isAdmin: boolean;
 }
 
 const StoreCtx = createContext<StoreState | null>(null);
@@ -116,6 +118,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [startDate, setStartDate] = useState<number>(0);
   const [hydrated, setHydrated] = useState(false);
   const [profile, setProfileState] = useState<Profile>(defaultProfile);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const sync = () => setIsAdmin(isAdminLogged());
+    sync();
+    window.addEventListener("nutrilens-admin-change", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("nutrilens-admin-change", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
 
   useEffect(() => {
     // Always read fresh from localStorage; never fall back to demo data.
@@ -171,7 +185,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const value = useMemo<StoreState>(() => {
     const loggedDays = new Set(entries.map((e) => dayKey(e.loggedAt)));
     const freeScansLeft = Math.max(0, FREE_SCANS - (profile.freeScansUsed || 0));
-    const isPaywalled = profile.onboarded && !profile.isSubscribed && freeScansLeft <= 0;
+    const isPaywalled = profile.onboarded && !profile.isSubscribed && !isAdmin && freeScansLeft <= 0;
 
     // Profile is the source of truth for the user's name and calorie goal
     const mergedGoals: Goals = profile.onboarded
@@ -213,10 +227,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       },
       freeScansLeft,
       isPaywalled,
+      isAdmin,
       registerScan: () =>
         setProfileState((prev) => ({ ...prev, freeScansUsed: (prev.freeScansUsed || 0) + 1 })),
     };
-  }, [entries, goals, bestStreak, startDate, hydrated, profile]);
+  }, [entries, goals, bestStreak, startDate, hydrated, profile, isAdmin]);
 
 
   return <StoreCtx.Provider value={value}>{children}</StoreCtx.Provider>;
