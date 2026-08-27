@@ -23,7 +23,7 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
-  const { goals, streak, entries, hydrated, profile, freeScansLeft } = useStore();
+  const { goals, streak, entries, hydrated, profile, freeScansLeft, isAdmin } = useStore();
   const { t, lang } = useLanguage();
   const totals = todayTotals(entries);
 
@@ -61,7 +61,12 @@ function HomePage() {
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          {hydrated && profile.isSubscribed && (
+          {hydrated && isAdmin && (
+            <span className="rounded-full bg-primary/15 px-2.5 py-1 text-[10px] font-bold text-primary">
+              {t("admin_badge")}
+            </span>
+          )}
+          {hydrated && profile.isSubscribed && !isAdmin && (
             <span className="rounded-full bg-primary/15 px-2.5 py-1 text-[10px] font-bold text-primary">
               {t("pro_active")}
             </span>
@@ -71,7 +76,7 @@ function HomePage() {
         </div>
       </header>
 
-      {hydrated && !profile.isSubscribed && (
+      {hydrated && !profile.isSubscribed && !isAdmin && (
         <div
           className={`mt-4 rounded-2xl border px-4 py-2.5 text-center text-xs font-semibold ${
             freeScansLeft <= 3

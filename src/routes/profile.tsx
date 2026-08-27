@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
 import { LangToggle } from "@/components/LangToggle";
 import { useStore } from "@/lib/store";
@@ -29,6 +29,19 @@ function ProfilePage() {
   const [c, setC] = useState(goals.carbs_pct);
   const [f, setF] = useState(goals.fat_pct);
   const [resetOpen, setResetOpen] = useState(false);
+  const navigate = useNavigate();
+  const [taps, setTaps] = useState<number[]>([]);
+
+  // Easter egg: 5 rapid taps on the avatar opens the admin page
+  function handleAvatarTap() {
+    const now = Date.now();
+    const next = [...taps, now].filter((t0) => now - t0 < 2000);
+    setTaps(next);
+    if (next.length >= 5) {
+      setTaps([]);
+      navigate({ to: "/admin" });
+    }
+  }
 
 
   // Sync local state when the store hydrates / changes elsewhere
@@ -94,6 +107,7 @@ function ProfilePage() {
     <AppShell>
       <header className="flex items-center gap-4 pt-2">
         <div
+          onClick={handleAvatarTap}
           className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-xl font-bold text-foreground"
           style={{ border: "2px solid #A8FF3E", background: "var(--color-card)" }}
         >
