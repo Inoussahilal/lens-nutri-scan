@@ -205,6 +205,36 @@ export function Onboarding() {
           >
             {step === 0 ? t("get_started") : step < 3 ? t("continue") : t("start_trial")}
           </button>
+          {step === 1 && (
+            <div className="mt-4">
+              <p className="text-xs text-muted-foreground">{t("promo_hint")}</p>
+              <div className="mt-2 flex gap-2">
+                <input
+                  value={promoInput}
+                  onChange={(e) => { setPromoInput(e.target.value); setPromoError(false); }}
+                  placeholder={t("promo_ph")}
+                  maxLength={40}
+                  className="h-10 min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 text-sm uppercase outline-none placeholder:normal-case placeholder:text-muted-foreground focus:border-primary"
+                />
+                <button
+                  onClick={applyPromo}
+                  className="tap h-10 shrink-0 rounded-xl bg-primary px-4 text-xs font-bold text-primary-foreground"
+                >
+                  {t("promo_apply")}
+                </button>
+              </div>
+              {appliedPromo && (
+                <p className="mt-2 text-xs font-semibold text-primary">
+                  {t("promo_applied_short", { code: appliedPromo.code })}
+                </p>
+              )}
+              {promoError && (
+                <p className="mt-2 text-xs font-semibold" style={{ color: "#FF6B6B" }}>
+                  {t("promo_invalid_short")}
+                </p>
+              )}
+            </div>
+          )}
           {step === 3 && <p className="mt-3 text-center text-xs text-muted-foreground">{t("no_payment")}</p>}
         </div>
       </div>
