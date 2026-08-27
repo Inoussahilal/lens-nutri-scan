@@ -18,6 +18,21 @@ export function Onboarding() {
   const [otherCountry, setOtherCountry] = useState("");
   const [showOther, setShowOther] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [promoInput, setPromoInput] = useState("");
+  const [promoError, setPromoError] = useState(false);
+  const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
+
+  function applyPromo() {
+    const found = validatePromoCode(promoInput);
+    if (found) {
+      setAppliedPromo(found);
+      setPromoError(false);
+      saveAppliedPromo(found);
+    } else {
+      setAppliedPromo(null);
+      setPromoError(true);
+    }
+  }
 
   const levels: { key: ActivityLevel; labelKey: "sedentary" | "moderate" | "active" | "very_active"; emoji: string }[] = [
     { key: "sedentary", labelKey: "sedentary", emoji: "🪑" },
