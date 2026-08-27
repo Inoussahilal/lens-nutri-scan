@@ -25,11 +25,18 @@ export function Paywall() {
   const [paying, setPaying] = useState(false);
   const [codeInput, setCodeInput] = useState("");
   const [promo, setPromo] = useState<PromoCode | null>(null);
+  const [preApplied, setPreApplied] = useState(false);
+  const [skipped, setSkipped] = useState(false);
   const [codeError, setCodeError] = useState(false);
   const [whatsapp, setWhatsapp] = useState(DEFAULT_WHATSAPP);
 
   useEffect(() => {
     setWhatsapp(getAdminSettings().whatsapp || DEFAULT_WHATSAPP);
+    const saved = getAppliedPromo();
+    if (saved) {
+      setPromo(saved);
+      setPreApplied(true);
+    }
   }, []);
 
   const benin = useMemo(() => isBenin(profile.country), [profile.country]);

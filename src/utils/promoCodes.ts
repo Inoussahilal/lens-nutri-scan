@@ -192,3 +192,39 @@ export function scansToday(entries: { loggedAt: number }[]): number {
     return `${x.getFullYear()}-${x.getMonth()}-${x.getDate()}` === key;
   }).length;
 }
+
+/* ---------- Promo saved at onboarding ---------- */
+
+export const APPLIED_CODE_KEY = "nutrilens_promo_code";
+export const APPLIED_INFLUENCER_KEY = "nutrilens_promo_influencer";
+export const APPLIED_FLAG_KEY = "nutrilens_promo_applied";
+
+export function saveAppliedPromo(promo: PromoCode) {
+  try {
+    localStorage.setItem(APPLIED_CODE_KEY, promo.code);
+    localStorage.setItem(APPLIED_INFLUENCER_KEY, promo.influencer);
+    localStorage.setItem(APPLIED_FLAG_KEY, "true");
+  } catch {}
+  if (typeof window !== "undefined") window.dispatchEvent(new Event("nutrilens-admin-change"));
+}
+
+/** Returns the promo saved at onboarding if it is still valid & active. */
+export function getAppliedPromo(): PromoCode | null {
+  if (typeof window === "undefined") return null;
+  try {
+    if (localStorage.getItem(APPLIED_FLAG_KEY) !== "true") return null;
+    const code = localStorage.getItem(APPLIED_CODE_KEY);
+    if (!code) return null;
+    return validatePromoCode(code);
+  } catch {
+    return null;
+  }
+}
+
+export function clearAppliedPromo() {
+  try {
+    localStorage.removeItem(APPLIED_CODE_KEY);
+    localStorage.removeItem(APPLIED_INFLUENCER_KEY);
+    localStorage.removeItem(APPLIED_FLAG_KEY);
+  } catch {}
+}

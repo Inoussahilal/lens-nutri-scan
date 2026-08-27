@@ -10,6 +10,7 @@ import { ChevronRight } from "lucide-react";
 import { MacroChips } from "@/components/MacroChips";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { getAppliedPromo } from "@/utils/promoCodes";
 
 
 export const Route = createFileRoute("/")({
@@ -38,7 +39,11 @@ function HomePage() {
 
   // Render greeting client-side only to avoid SSR/CSR mismatch
   const [now, setNow] = useState<Date | null>(null);
-  useEffect(() => { setNow(new Date()); }, []);
+  const [activePromo, setActivePromo] = useState<string | null>(null);
+  useEffect(() => {
+    setNow(new Date());
+    setActivePromo(getAppliedPromo()?.code ?? null);
+  }, []);
 
   const greetingKey = now
     ? now.getHours() < 12
@@ -75,6 +80,15 @@ function HomePage() {
           <StreakBadge days={hydrated ? streak : 0} />
         </div>
       </header>
+
+      {hydrated && !profile.isSubscribed && !isAdmin && activePromo && (
+        <div
+          className="mt-4 rounded-xl px-4 py-2.5 text-center text-xs font-semibold text-primary"
+          style={{ background: "rgba(168,255,62,0.15)", border: "1px solid #A8FF3E" }}
+        >
+          {t("promo_banner", { code: activePromo })}
+        </div>
+      )}
 
       {hydrated && !profile.isSubscribed && !isAdmin && (
         <div
