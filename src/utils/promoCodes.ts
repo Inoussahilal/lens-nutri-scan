@@ -27,7 +27,7 @@ const LOG_KEY = "nutrilens_subscriptions_log";
 const SETTINGS_KEY = "nutrilens_admin_settings";
 
 export const ADMIN_LOGGED_KEY = "nutrilens_admin_logged";
-export const ADMIN_PASSWORD = "NutriSnapAdmin2026";
+export const ADMIN_PASSWORD = "NutriSnapAdmin2004#";
 export const DEFAULT_WHATSAPP = "22967354848";
 
 function read<T>(key: string, fallback: T): T {
