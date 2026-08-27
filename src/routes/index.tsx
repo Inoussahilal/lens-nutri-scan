@@ -10,6 +10,7 @@ import { ChevronRight } from "lucide-react";
 import { MacroChips } from "@/components/MacroChips";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { getAppliedPromo } from "@/utils/promoCodes";
 
 
 export const Route = createFileRoute("/")({
