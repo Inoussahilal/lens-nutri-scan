@@ -4,6 +4,7 @@ import { Camera, Sparkles, TrendingUp } from "lucide-react";
 import { useStore, type ActivityLevel } from "@/lib/store";
 import { useLanguage } from "@/lib/i18n";
 import { LangToggle } from "./LangToggle";
+import { validatePromoCode, saveAppliedPromo, type PromoCode } from "@/utils/promoCodes";
 
 export function Onboarding() {
   const { t } = useLanguage();
