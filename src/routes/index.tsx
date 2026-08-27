@@ -76,6 +76,15 @@ function HomePage() {
         </div>
       </header>
 
+      {hydrated && !profile.isSubscribed && !isAdmin && activePromo && (
+        <div
+          className="mt-4 rounded-xl px-4 py-2.5 text-center text-xs font-semibold text-primary"
+          style={{ background: "rgba(168,255,62,0.15)", border: "1px solid #A8FF3E" }}
+        >
+          {t("promo_banner", { code: activePromo })}
+        </div>
+      )}
+
       {hydrated && !profile.isSubscribed && !isAdmin && (
         <div
           className={`mt-4 rounded-2xl border px-4 py-2.5 text-center text-xs font-semibold ${
