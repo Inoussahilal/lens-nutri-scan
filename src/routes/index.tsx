@@ -38,7 +38,11 @@ function HomePage() {
 
   // Render greeting client-side only to avoid SSR/CSR mismatch
   const [now, setNow] = useState<Date | null>(null);
-  useEffect(() => { setNow(new Date()); }, []);
+  const [activePromo, setActivePromo] = useState<string | null>(null);
+  useEffect(() => {
+    setNow(new Date());
+    setActivePromo(getAppliedPromo()?.code ?? null);
+  }, []);
 
   const greetingKey = now
     ? now.getHours() < 12
