@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useStore } from "@/lib/store";
@@ -281,6 +281,14 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
             Sauvegarder
           </button>
         </section>
+
+        {/* Access the app */}
+        <Link
+          to="/"
+          className="glow-lime tap flex h-[52px] w-full items-center justify-center rounded-2xl bg-primary font-bold text-primary-foreground"
+        >
+          Accéder à l'app →
+        </Link>
       </div>
     </div>
   );
