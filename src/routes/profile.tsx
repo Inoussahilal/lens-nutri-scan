@@ -96,7 +96,6 @@ function ProfilePage() {
     <AppShell>
       <header className="flex items-center gap-4 pt-2">
         <div
-          onClick={handleAvatarTap}
           className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full text-xl font-bold text-foreground"
           style={{ border: "2px solid #A8FF3E", background: "var(--color-card)" }}
         >
