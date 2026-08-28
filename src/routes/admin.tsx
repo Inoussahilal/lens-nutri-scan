@@ -44,14 +44,29 @@ function AdminPage() {
 
 function Login({ onSuccess }: { onSuccess: () => void }) {
   const [pw, setPw] = useState("");
+  const [lockUntil, setLockUntil] = useState(0);
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    if (!lockUntil) return;
+    const id = setInterval(() => setNow(Date.now()), 500);
+    return () => clearInterval(id);
+  }, [lockUntil]);
+
+  const locked = lockUntil > now;
+  const secondsLeft = Math.max(0, Math.ceil((lockUntil - now) / 1000));
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (locked) return;
     if (pw === ADMIN_PASSWORD) {
       setAdminLogged(true);
       onSuccess();
     } else {
-      toast.error("Mot de passe incorrect");
+      setPw("");
+      setLockUntil(Date.now() + 30_000);
+      setNow(Date.now());
+      toast.error("Mot de passe incorrect — réessaie dans 30 secondes");
     }
   }
 
