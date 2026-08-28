@@ -80,15 +80,22 @@ function Login({ onSuccess }: { onSuccess: () => void }) {
             type="password"
             value={pw}
             onChange={(e) => setPw(e.target.value)}
+            disabled={locked}
             placeholder="Mot de passe"
-            className="h-12 rounded-xl border border-white/10 bg-surface px-4 text-sm outline-none"
+            className="h-12 rounded-xl border border-white/10 bg-surface px-4 text-sm outline-none disabled:opacity-50"
           />
           <button
             type="submit"
-            className="glow-lime tap h-12 rounded-xl bg-primary font-bold text-primary-foreground"
+            disabled={locked}
+            className="glow-lime tap h-12 rounded-xl bg-primary font-bold text-primary-foreground disabled:opacity-50"
           >
-            Se connecter
+            {locked ? `Bloqué — ${secondsLeft}s` : "Se connecter"}
           </button>
+          {locked && (
+            <p className="text-xs" style={{ color: "#FF6B6B" }}>
+              Trop de tentatives. Réessaie dans {secondsLeft} secondes.
+            </p>
+          )}
         </form>
       </div>
     </div>
