@@ -19,7 +19,7 @@ export const Route = createFileRoute("/profile")({
 });
 
 function ProfilePage() {
-  const { goals, setGoals, entries, bestStreak, startDate, profile, setProfile } = useStore();
+  const { goals, setGoals, entries, bestStreak, startDate, profile, setProfile, isAdmin } = useStore();
   const { t, lang } = useLanguage();
 
   const [firstName, setFirstName] = useState(profile.firstName || goals.name);
@@ -177,6 +177,17 @@ function ProfilePage() {
       <button onClick={save} className="glow-lime tap mt-5 h-[52px] w-full rounded-2xl bg-primary font-bold text-primary-foreground">
         {t("save_changes")}
       </button>
+
+      {isAdmin && (
+        <button
+          onClick={() => navigate({ to: "/admin" })}
+          className="tap mt-3 flex h-[52px] w-full items-center justify-center rounded-2xl bg-card text-sm font-bold text-primary"
+          style={{ border: "1.5px solid #A8FF3E" }}
+        >
+          {t("admin_dashboard_btn")}
+        </button>
+      )}
+
 
       <button
         onClick={() => setResetOpen(true)}

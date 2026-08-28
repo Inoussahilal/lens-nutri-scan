@@ -174,6 +174,8 @@ const en = {
   promo_card_cta: "💡 Have an influencer promo code? Enter it now to save $1 on your first month!",
   promo_skip: "Skip",
   admin_badge: "🛡️ Admin",
+  admin_access_app: "Access the app",
+  admin_dashboard_btn: "🛡️ Admin Dashboard",
   maintenance_title: "Maintenance in progress",
   maintenance_msg: "NutriSnap is briefly unavailable. Please come back soon.",
 };
@@ -341,6 +343,8 @@ const fr: Record<TKey, string> = {
   promo_card_cta: "💡 Tu as un code promo d'un influenceur ? Entre-le maintenant pour économiser 1 $ sur ton premier mois !",
   promo_skip: "Passer",
   admin_badge: "🛡️ Admin",
+  admin_access_app: "Accéder à l'app",
+  admin_dashboard_btn: "🛡️ Tableau de bord Admin",
   maintenance_title: "Maintenance en cours",
   maintenance_msg: "NutriSnap est momentanément indisponible. Reviens bientôt.",
 };
