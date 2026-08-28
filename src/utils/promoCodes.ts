@@ -27,6 +27,8 @@ const LOG_KEY = "nutrilens_subscriptions_log";
 const SETTINGS_KEY = "nutrilens_admin_settings";
 
 export const ADMIN_LOGGED_KEY = "nutrilens_admin_logged";
+export const ADMIN_SESSION_KEY = "nutrilens_admin_session";
+export const ADMIN_SESSION_MAX_AGE = 24 * 60 * 60 * 1000;
 export const ADMIN_PASSWORD = "NutriSnapAdmin2004#";
 export const DEFAULT_WHATSAPP = "22967354848";
 
