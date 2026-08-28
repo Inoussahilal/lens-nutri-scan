@@ -14,6 +14,8 @@ import {
   logSubscription,
   getAdminSettings,
   DEFAULT_WHATSAPP,
+  getAppliedPromo,
+  saveAppliedPromo,
   type PromoCode,
 } from "@/utils/promoCodes";
 
