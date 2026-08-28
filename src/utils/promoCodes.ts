@@ -27,6 +27,8 @@ const LOG_KEY = "nutrilens_subscriptions_log";
 const SETTINGS_KEY = "nutrilens_admin_settings";
 
 export const ADMIN_LOGGED_KEY = "nutrilens_admin_logged";
+export const ADMIN_SESSION_KEY = "nutrilens_admin_session";
+export const ADMIN_SESSION_MAX_AGE = 24 * 60 * 60 * 1000;
 export const ADMIN_PASSWORD = "NutriSnapAdmin2004#";
 export const DEFAULT_WHATSAPP = "22967354848";
 
@@ -167,10 +169,18 @@ export function saveAdminSettings(s: AdminSettings) {
   if (typeof window !== "undefined") window.dispatchEvent(new Event("nutrilens-admin-change"));
 }
 
+/** Admin sessions expire automatically after 24 hours. */
 export function isAdminLogged(): boolean {
   if (typeof window === "undefined") return false;
   try {
-    return localStorage.getItem(ADMIN_LOGGED_KEY) === "true";
+    if (localStorage.getItem(ADMIN_LOGGED_KEY) !== "true") return false;
+    const started = Number(localStorage.getItem(ADMIN_SESSION_KEY) || 0);
+    if (!started || Date.now() - started > ADMIN_SESSION_MAX_AGE) {
+      localStorage.removeItem(ADMIN_LOGGED_KEY);
+      localStorage.removeItem(ADMIN_SESSION_KEY);
+      return false;
+    }
+    return true;
   } catch {
     return false;
   }
@@ -178,8 +188,13 @@ export function isAdminLogged(): boolean {
 
 export function setAdminLogged(v: boolean) {
   try {
-    if (v) localStorage.setItem(ADMIN_LOGGED_KEY, "true");
-    else localStorage.removeItem(ADMIN_LOGGED_KEY);
+    if (v) {
+      localStorage.setItem(ADMIN_LOGGED_KEY, "true");
+      localStorage.setItem(ADMIN_SESSION_KEY, String(Date.now()));
+    } else {
+      localStorage.removeItem(ADMIN_LOGGED_KEY);
+      localStorage.removeItem(ADMIN_SESSION_KEY);
+    }
   } catch {}
   if (typeof window !== "undefined") window.dispatchEvent(new Event("nutrilens-admin-change"));
 }
