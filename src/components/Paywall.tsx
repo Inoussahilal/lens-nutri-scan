@@ -54,6 +54,7 @@ export function Paywall() {
     if (found) {
       setPromo(found);
       setCodeError(false);
+      saveAppliedPromo(found);
     } else {
       setPromo(null);
       setCodeError(true);
