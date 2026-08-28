@@ -30,18 +30,7 @@ function ProfilePage() {
   const [f, setF] = useState(goals.fat_pct);
   const [resetOpen, setResetOpen] = useState(false);
   const navigate = useNavigate();
-  const [taps, setTaps] = useState<number[]>([]);
 
-  // Easter egg: 5 rapid taps on the avatar opens the admin page
-  function handleAvatarTap() {
-    const now = Date.now();
-    const next = [...taps, now].filter((t0) => now - t0 < 2000);
-    setTaps(next);
-    if (next.length >= 5) {
-      setTaps([]);
-      navigate({ to: "/admin" });
-    }
-  }
 
 
   // Sync local state when the store hydrates / changes elsewhere
