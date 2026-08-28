@@ -166,17 +166,6 @@ function ProfilePage() {
         {t("save_changes")}
       </button>
 
-      {isAdmin && (
-        <button
-          onClick={() => navigate({ to: "/admin" })}
-          className="tap mt-3 flex h-[52px] w-full items-center justify-center rounded-2xl bg-card text-sm font-bold text-primary"
-          style={{ border: "1.5px solid #A8FF3E" }}
-        >
-          {t("admin_dashboard_btn")}
-        </button>
-      )}
-
-
       <button
         onClick={() => setResetOpen(true)}
         className="tap mt-4 w-full text-center text-xs font-semibold"
@@ -184,6 +173,17 @@ function ProfilePage() {
       >
         {t("reset_app_data")}
       </button>
+
+      {/* Only rendered for an authenticated admin session (24h max) */}
+      {isAdmin && (
+        <button
+          onClick={() => navigate({ to: "/admin" })}
+          className="tap mx-auto mt-6 block rounded-lg px-3 py-1.5 text-[11px] font-semibold text-muted-foreground"
+          style={{ border: "1px solid rgba(168,255,62,0.35)" }}
+        >
+          🛡️ Admin
+        </button>
+      )}
 
       {resetOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6" onClick={() => setResetOpen(false)}>
