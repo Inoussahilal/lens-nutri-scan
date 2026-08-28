@@ -14,6 +14,8 @@ import {
   logSubscription,
   getAdminSettings,
   DEFAULT_WHATSAPP,
+  getAppliedPromo,
+  saveAppliedPromo,
   type PromoCode,
 } from "@/utils/promoCodes";
 
@@ -52,6 +54,7 @@ export function Paywall() {
     if (found) {
       setPromo(found);
       setCodeError(false);
+      saveAppliedPromo(found);
     } else {
       setPromo(null);
       setCodeError(true);
@@ -127,32 +130,57 @@ export function Paywall() {
           </div>
 
           {/* Promo code */}
-          <div className="mt-5 rounded-2xl border border-white/8 bg-white/[0.04] p-4 text-left">
-            <p className="text-sm font-semibold">{t("promo_title")}</p>
-            <div className="mt-2.5 flex gap-2">
-              <input
-                value={codeInput}
-                onChange={(e) => {
-                  setCodeInput(e.target.value);
-                  setCodeError(false);
-                }}
-                placeholder={t("promo_ph")}
-                className="h-11 min-w-0 flex-1 rounded-xl border border-white/10 bg-surface px-3 text-sm uppercase outline-none placeholder:normal-case placeholder:text-muted-foreground"
-              />
+          {preApplied && promo ? (
+            <div
+              className="mt-5 rounded-2xl p-4 text-left text-sm font-semibold text-primary"
+              style={{ background: "rgba(168,255,62,0.12)", border: "1px solid rgba(168,255,62,0.4)" }}
+            >
+              {t("promo_pre_applied", { code: promo.code })}
+            </div>
+          ) : promo ? (
+            <div
+              className="mt-5 rounded-2xl p-4 text-left text-sm font-semibold text-primary"
+              style={{ background: "rgba(168,255,62,0.12)", border: "1px solid rgba(168,255,62,0.4)" }}
+            >
+              {t("promo_applied_short", { code: promo.code })}
+            </div>
+          ) : skipped ? null : (
+            <div
+              className="mt-5 rounded-2xl p-4 text-left"
+              style={{ background: "rgba(168,255,62,0.1)", border: "1px solid rgba(168,255,62,0.3)" }}
+            >
+              <p className="text-sm font-semibold leading-relaxed text-primary">{t("promo_card_cta")}</p>
+              <div className="mt-3 flex gap-2">
+                <input
+                  value={codeInput}
+                  onChange={(e) => {
+                    setCodeInput(e.target.value);
+                    setCodeError(false);
+                  }}
+                  placeholder={t("promo_ph")}
+                  maxLength={40}
+                  className="h-11 min-w-0 flex-1 rounded-xl border border-white/10 bg-surface px-3 text-sm uppercase outline-none placeholder:normal-case placeholder:text-muted-foreground focus:border-primary"
+                />
+                <button
+                  onClick={applyCode}
+                  className="tap h-11 shrink-0 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground"
+                >
+                  {t("promo_apply")}
+                </button>
+              </div>
+              {codeError && (
+                <p className="mt-2 text-xs font-semibold" style={{ color: "#FF6B6B" }}>
+                  {t("promo_invalid_short")}
+                </p>
+              )}
               <button
-                onClick={applyCode}
-                className="tap h-11 shrink-0 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground"
+                onClick={() => setSkipped(true)}
+                className="mt-3 text-xs font-medium text-muted-foreground underline"
               >
-                {t("promo_apply")}
+                {t("promo_skip")}
               </button>
             </div>
-            {promo && <p className="mt-2 text-xs font-semibold text-primary">{t("promo_success")}</p>}
-            {codeError && (
-              <p className="mt-2 text-xs font-semibold" style={{ color: "#FF6B6B" }}>
-                {t("promo_invalid")}
-              </p>
-            )}
-          </div>
+          )}
 
           <div className="mt-5 flex flex-col gap-3">
             {benin ? (
