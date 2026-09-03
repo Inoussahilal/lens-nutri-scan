@@ -167,6 +167,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
 
+  // If admin logs in after hydration, ensure the admin profile is onboarded
+  useEffect(() => {
+    if (!hydrated || !isAdmin) return;
+    setProfileState((prev) =>
+      prev.onboarded
+        ? prev
+        : {
+            ...prev,
+            firstName: prev.firstName || "Hilal",
+            lastName: prev.lastName || "INOUSSA",
+            calorieGoal: prev.calorieGoal || 2500,
+            activityLevel: prev.activityLevel || "active",
+            onboarded: true,
+          },
+    );
+  }, [hydrated, isAdmin]);
+
   // Recompute best streak whenever entries change
   useEffect(() => {
     if (!hydrated) return;
