@@ -58,6 +58,11 @@ function HomePage() {
     <AppShell>
       <header className="flex items-start justify-between gap-2 pt-2">
         <div className="min-w-0">
+          {hydrated && isAdmin && (
+            <span className="mb-1 inline-block rounded-full bg-primary/15 px-2.5 py-1 text-[10px] font-bold text-primary">
+              🛡️ {t("admin_badge")}
+            </span>
+          )}
           <h1 className="font-display text-[22px] font-bold leading-tight text-foreground">
             {greetingKey ? `${t(greetingKey)}, ${displayName}` : displayName} 👋
           </h1>
@@ -66,11 +71,6 @@ function HomePage() {
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          {hydrated && isAdmin && (
-            <span className="rounded-full bg-primary/15 px-2.5 py-1 text-[10px] font-bold text-primary">
-              {t("admin_badge")}
-            </span>
-          )}
           {hydrated && profile.isSubscribed && !isAdmin && (
             <span className="rounded-full bg-primary/15 px-2.5 py-1 text-[10px] font-bold text-primary">
               {t("pro_active")}

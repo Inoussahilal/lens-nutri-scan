@@ -153,11 +153,36 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const base = rawP ? { ...defaultProfile, ...JSON.parse(rawP) } : { ...defaultProfile };
       // Subscription status survives a data reset
       if (localStorage.getItem("nutrilens_is_subscribed") === "true") base.isSubscribed = true;
+      // Authenticated admins get a pre-filled profile and skip onboarding
+      if (isAdminLogged()) {
+        if (!base.firstName) base.firstName = "Hilal";
+        if (!base.lastName) base.lastName = "INOUSSA";
+        if (!base.calorieGoal) base.calorieGoal = 2500;
+        if (!base.activityLevel) base.activityLevel = "active";
+        base.onboarded = true;
+      }
       setProfileState(base);
     } catch {}
     setHydrated(true);
   }, []);
 
+
+  // If admin logs in after hydration, ensure the admin profile is onboarded
+  useEffect(() => {
+    if (!hydrated || !isAdmin) return;
+    setProfileState((prev) =>
+      prev.onboarded
+        ? prev
+        : {
+            ...prev,
+            firstName: prev.firstName || "Hilal",
+            lastName: prev.lastName || "INOUSSA",
+            calorieGoal: prev.calorieGoal || 2500,
+            activityLevel: prev.activityLevel || "active",
+            onboarded: true,
+          },
+    );
+  }, [hydrated, isAdmin]);
 
   // Recompute best streak whenever entries change
   useEffect(() => {
