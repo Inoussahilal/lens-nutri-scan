@@ -44,6 +44,9 @@ export function AppGate({ children }: { children: ReactNode }) {
     );
   }
 
+  // Admins skip onboarding and paywall entirely — straight to the app
+  if (isAdmin) return <>{children}</>;
+
   if (!profile.onboarded) return <Onboarding />;
   if (isPaywalled) return <Paywall />;
   return <>{children}</>;
