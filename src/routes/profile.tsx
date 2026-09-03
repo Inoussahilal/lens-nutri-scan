@@ -202,19 +202,61 @@ function ProfilePage() {
               <button
                 onClick={() => {
                   const handleReset = () => {
-                    // Save subscription data before clearing
-                    const isSubscribed = localStorage.getItem("nutrilens_is_subscribed");
-                    const subscriptionDate = localStorage.getItem("nutrilens_subscription_date");
-                    const userPhone = localStorage.getItem("nutrilens_user_phone");
+                    // 1) Preserve profile (name + calorie goal + activity + country),
+                    //    reset free scans to 0, keep onboarded so no onboarding screen.
+                    let preservedProfile: string | null = null;
+                    try {
+                      const raw = localStorage.getItem("nutrilens.profile.v1");
+                      if (raw) {
+                        const p = JSON.parse(raw);
+                        preservedProfile = JSON.stringify({
+                          ...p,
+                          freeScansUsed: 0,
+                          onboarded: p.onboarded ?? true,
+                        });
+                      }
+                    } catch {}
 
+                    // 2) Preserve these keys verbatim (identity, promo, subscription, admin, logs).
+                    const keepKeys = [
+                      "nutrilens_promo_code",
+                      "nutrilens_promo_influencer",
+                      "nutrilens_promo_applied",
+                      "nutrilens_promo_used",
+                      "nutrilens_promo_date",
+                      "nutrilens_is_subscribed",
+                      "nutrilens_subscription_date",
+                      "nutrilens_transaction_id",
+                      "nutrilens_user_phone",
+                      "nutrilens_admin_logged",
+                      "nutrilens_admin_session",
+                      "nutrilens_admin_promo_codes",
+                      "nutrilens_admin_settings",
+                      "nutrilens_subscriptions_log",
+                      "nutrilens_promo_stats",
+                    ];
+                    const saved: Record<string, string> = {};
+                    for (const k of keepKeys) {
+                      const v = localStorage.getItem(k);
+                      if (v !== null) saved[k] = v;
+                    }
+
+                    // 3) Wipe everything: diary, streak, free scans, meal plan, language, state.
                     localStorage.clear();
                     sessionStorage.clear();
 
-                    if (isSubscribed) localStorage.setItem("nutrilens_is_subscribed", isSubscribed);
-                    if (subscriptionDate) localStorage.setItem("nutrilens_subscription_date", subscriptionDate);
-                    if (userPhone) localStorage.setItem("nutrilens_user_phone", userPhone);
+                    // 4) Restore preserved keys.
+                    for (const [k, v] of Object.entries(saved)) {
+                      localStorage.setItem(k, v);
+                    }
 
-                    // Force complete page reload to reset ALL React state
+                    // 5) Restore profile (name + calorie goal kept; scans reset to 0).
+                    if (preservedProfile) {
+                      localStorage.setItem("nutrilens.profile.v1", preservedProfile);
+                    }
+
+                    // Force complete page reload to reset ALL React state.
+                    // onboarding is skipped (onboarded=true) → lands on Dashboard.
                     window.location.replace(window.location.origin);
                   };
                   handleReset();
