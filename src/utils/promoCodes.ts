@@ -53,22 +53,20 @@ function write(key: string, value: unknown) {
 export function getPromoCodes(): PromoCode[] {
   const custom = read<PromoCode[]>(CODES_KEY, []);
   const stats = read<PromoCode[]>(STATS_KEY, []);
-  const merged: PromoCode[] = [...PROMO_CODES, ...custom].map((c) => {
+  const byCode = new Map<string, PromoCode>();
+  for (const c of [...PROMO_CODES, ...custom]) {
+    const key = c.code.toUpperCase();
+    const prev = byCode.get(key);
+    byCode.set(key, { ...(prev ?? {}), ...c });
+  }
+  return [...byCode.values()].map((c) => {
     const s = stats.find((x) => x.code.toUpperCase() === c.code.toUpperCase());
     return {
       ...c,
-      uses: s?.uses ?? c.uses ?? 0,
+      uses: s?.uses ?? 0,
       lastUsed: s?.lastUsed ?? null,
       active: c.active !== false,
     };
-  });
-  // de-dupe by code
-  const seen = new Set<string>();
-  return merged.filter((c) => {
-    const k = c.code.toUpperCase();
-    if (seen.has(k)) return false;
-    seen.add(k);
-    return true;
   });
 }
 
@@ -86,12 +84,16 @@ export function setCodeActive(code: string, active: boolean) {
   const all = getPromoCodes().map((c) =>
     c.code.toUpperCase() === code.toUpperCase() ? { ...c, active } : c,
   );
-  const defaults = new Set(PROMO_CODES.map((c) => c.code.toUpperCase()));
-  const custom = all.filter((c) => !defaults.has(c.code.toUpperCase()));
-  const defaultOverrides = all
-    .filter((c) => defaults.has(c.code.toUpperCase()))
-    .map((c) => ({ code: c.code, influencer: c.influencer, uses: 0, active: c.active !== false }));
-  write(CODES_KEY, [...custom, ...defaultOverrides]);
+  write(
+    CODES_KEY,
+    all.map((c) => ({
+      code: c.code,
+      influencer: c.influencer,
+      uses: 0,
+      active: c.active !== false,
+    })),
+  );
+  if (typeof window !== "undefined") window.dispatchEvent(new Event("nutrilens-admin-change"));
 }
 
 export function createPromoCode(code: string, influencer: string): boolean {
@@ -103,11 +105,26 @@ export function createPromoCode(code: string, influencer: string): boolean {
   return true;
 }
 
-export function validatePromoCode(input: string): PromoCode | null {
+export type PromoCheck =
+  | { status: "valid"; promo: PromoCode }
+  | { status: "inactive" }
+  | { status: "invalid" };
+
+/** Distinguishes unknown codes from deactivated ones. */
+export function checkPromoCode(input: string): PromoCheck {
   const clean = input.trim().toUpperCase();
-  if (!clean) return null;
-  return getPromoCodes().find((c) => c.code.toUpperCase() === clean && c.active !== false) ?? null;
+  if (!clean) return { status: "invalid" };
+  const found = getPromoCodes().find((c) => c.code.toUpperCase() === clean);
+  if (!found) return { status: "invalid" };
+  if (found.active === false) return { status: "inactive" };
+  return { status: "valid", promo: found };
 }
+
+export function validatePromoCode(input: string): PromoCode | null {
+  const res = checkPromoCode(input);
+  return res.status === "valid" ? res.promo : null;
+}
+
 
 export function registerPromoUse(promo: PromoCode) {
   const now = new Date().toISOString();
