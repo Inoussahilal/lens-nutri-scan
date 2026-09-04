@@ -249,7 +249,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         }));
         setGoalsState((prev) => ({ ...prev, name: p.firstName, calories: p.calorieGoal }));
         setStartDate((prev) => prev || Date.now());
+        registerUserSignup();
       },
+
       freeScansLeft,
       isPaywalled,
       isAdmin,
