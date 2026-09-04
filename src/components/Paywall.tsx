@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { openKkiapayPayment, isBenin, type KkiapaySuccess } from "@/utils/payment";
 import {
   PRICING,
-  validatePromoCode,
+  checkPromoCode,
   registerPromoUse,
   logSubscription,
   getAdminSettings,
@@ -29,7 +29,7 @@ export function Paywall() {
   const [promo, setPromo] = useState<PromoCode | null>(null);
   const [preApplied, setPreApplied] = useState(false);
   const [skipped, setSkipped] = useState(false);
-  const [codeError, setCodeError] = useState(false);
+  const [codeError, setCodeError] = useState<"invalid" | "inactive" | null>(null);
   const [whatsapp, setWhatsapp] = useState(DEFAULT_WHATSAPP);
 
   useEffect(() => {
@@ -50,14 +50,14 @@ export function Paywall() {
   const whatsappDisplay = `+${whatsapp}`;
 
   function applyCode() {
-    const found = validatePromoCode(codeInput);
-    if (found) {
-      setPromo(found);
-      setCodeError(false);
-      saveAppliedPromo(found);
+    const res = checkPromoCode(codeInput);
+    if (res.status === "valid") {
+      setPromo(res.promo);
+      setCodeError(null);
+      saveAppliedPromo(res.promo);
     } else {
       setPromo(null);
-      setCodeError(true);
+      setCodeError(res.status);
     }
   }
 
@@ -155,7 +155,7 @@ export function Paywall() {
                   value={codeInput}
                   onChange={(e) => {
                     setCodeInput(e.target.value);
-                    setCodeError(false);
+                    setCodeError(null);
                   }}
                   placeholder={t("promo_ph")}
                   maxLength={40}
@@ -170,7 +170,7 @@ export function Paywall() {
               </div>
               {codeError && (
                 <p className="mt-2 text-xs font-semibold" style={{ color: "#FF6B6B" }}>
-                  {t("promo_invalid_short")}
+                  {t(codeError === "inactive" ? "promo_inactive_short" : "promo_invalid_short")}
                 </p>
               )}
               <button

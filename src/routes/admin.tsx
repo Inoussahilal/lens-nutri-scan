@@ -14,6 +14,10 @@ import {
   setCodeActive,
   scansToday,
   DEFAULT_WHATSAPP,
+  availableMonths,
+  buildMonthlyRecap,
+  monthKey,
+  recapToText,
   type PromoCode,
   type SubscriptionLogEntry,
 } from "@/utils/promoCodes";
@@ -254,6 +258,8 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
           </div>
         </section>
 
+        <MonthlyRecap />
+
         {/* Subscriptions */}
         <section className="rounded-2xl border border-white/7 bg-white/[0.04] p-4">
           <h2 className="font-display text-base font-semibold">Derniers abonnements</h2>
@@ -313,6 +319,120 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
         </Link>
       </div>
     </div>
+  );
+}
+
+function MonthlyRecap() {
+  const [months, setMonths] = useState<string[]>([]);
+  const [month, setMonth] = useState(monthKey(new Date()));
+  const [recap, setRecap] = useState<ReturnType<typeof buildMonthlyRecap> | null>(null);
+
+  useEffect(() => {
+    setMonths(availableMonths());
+  }, []);
+
+  useEffect(() => {
+    setRecap(buildMonthlyRecap(month));
+  }, [month]);
+
+  function label(m: string) {
+    const [y, mm] = m.split("-");
+    return new Date(Number(y), Number(mm) - 1, 1).toLocaleDateString("fr-FR", {
+      month: "long",
+      year: "numeric",
+    });
+  }
+
+  function exportRecap() {
+    if (!recap) return;
+    const blob = new Blob([recapToText(recap)], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `nutrisnap-recap-${recap.month}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Récapitulatif exporté");
+  }
+
+  return (
+    <section className="rounded-2xl border border-white/7 bg-white/[0.04] p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="font-display text-base font-semibold">📊 Récapitulatif mensuel</h2>
+        <select
+          value={month}
+          onChange={(e) => setMonth(e.target.value)}
+          className="h-9 rounded-xl border border-white/10 bg-surface px-3 text-xs outline-none"
+        >
+          {months.map((m) => (
+            <option key={m} value={m}>
+              {label(m)}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {recap && (
+        <>
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Card label="Nouveaux abonnés" value={String(recap.subscribers)} />
+            <Card
+              label="Revenus"
+              value={`${recap.revenueFcfa.toLocaleString("fr-FR")} F · $${recap.revenueUsd.toFixed(2)}`}
+            />
+            <Card label="Codes utilisés" value={String(recap.promoUses)} />
+            <Card label="Taux de conversion" value={`${recap.conversion.toFixed(1)}%`} />
+          </div>
+
+          <div className="mt-4 overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="text-muted-foreground">
+                <tr>
+                  <th className="py-2 pr-3">Influenceur</th>
+                  <th className="py-2 pr-3">Code</th>
+                  <th className="py-2 pr-3">Nouveaux abonnés</th>
+                  <th className="py-2 pr-3">Revenus générés</th>
+                  <th className="py-2">Commission (10%)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recap.rows.length === 0 ? (
+                  <tr className="border-t border-white/5">
+                    <td colSpan={5} className="py-3 text-muted-foreground">
+                      Aucun abonnement avec code promo ce mois-ci.
+                    </td>
+                  </tr>
+                ) : (
+                  recap.rows.map((r) => (
+                    <tr key={r.code} className="border-t border-white/5">
+                      <td className="py-2 pr-3">{r.influencer}</td>
+                      <td className="py-2 pr-3 font-semibold">{r.code}</td>
+                      <td className="py-2 pr-3 tabular-nums">{r.subscribers}</td>
+                      <td className="py-2 pr-3 tabular-nums">${r.revenue.toFixed(2)}</td>
+                      <td className="py-2 tabular-nums">${r.commission.toFixed(2)}</td>
+                    </tr>
+                  ))
+                )}
+                <tr className="border-t border-white/15 font-semibold">
+                  <td className="py-2 pr-3">TOTAL</td>
+                  <td className="py-2 pr-3">—</td>
+                  <td className="py-2 pr-3 tabular-nums">{recap.totals.subscribers}</td>
+                  <td className="py-2 pr-3 tabular-nums">${recap.totals.revenue.toFixed(2)}</td>
+                  <td className="py-2 tabular-nums">${recap.totals.commission.toFixed(2)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <button
+            onClick={exportRecap}
+            className="glow-lime tap mt-4 h-11 w-full rounded-xl bg-primary text-sm font-bold text-primary-foreground"
+          >
+            📥 Exporter le récapitulatif
+          </button>
+        </>
+      )}
+    </section>
   );
 }
 

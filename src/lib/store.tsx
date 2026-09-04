@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { isAdminLogged } from "@/utils/promoCodes";
+import { isAdminLogged, registerUserSignup } from "@/utils/promoCodes";
 
 export type MealType = "breakfast" | "lunch" | "dinner" | "snacks";
 
@@ -249,7 +249,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         }));
         setGoalsState((prev) => ({ ...prev, name: p.firstName, calories: p.calorieGoal }));
         setStartDate((prev) => prev || Date.now());
+        registerUserSignup();
       },
+
       freeScansLeft,
       isPaywalled,
       isAdmin,

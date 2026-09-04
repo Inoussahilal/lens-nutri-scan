@@ -4,7 +4,7 @@ import { Camera, Sparkles, TrendingUp } from "lucide-react";
 import { useStore, type ActivityLevel } from "@/lib/store";
 import { useLanguage } from "@/lib/i18n";
 import { LangToggle } from "./LangToggle";
-import { validatePromoCode, saveAppliedPromo, type PromoCode } from "@/utils/promoCodes";
+import { checkPromoCode, saveAppliedPromo, type PromoCode } from "@/utils/promoCodes";
 
 export function Onboarding() {
   const { t } = useLanguage();
@@ -20,18 +20,18 @@ export function Onboarding() {
   const [showOther, setShowOther] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [promoInput, setPromoInput] = useState("");
-  const [promoError, setPromoError] = useState(false);
+  const [promoError, setPromoError] = useState<"invalid" | "inactive" | null>(null);
   const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
 
   function applyPromo() {
-    const found = validatePromoCode(promoInput);
-    if (found) {
-      setAppliedPromo(found);
-      setPromoError(false);
-      saveAppliedPromo(found);
+    const res = checkPromoCode(promoInput);
+    if (res.status === "valid") {
+      setAppliedPromo(res.promo);
+      setPromoError(null);
+      saveAppliedPromo(res.promo);
     } else {
       setAppliedPromo(null);
-      setPromoError(true);
+      setPromoError(res.status);
     }
   }
 
@@ -139,7 +139,7 @@ export function Onboarding() {
                   <div className="flex gap-2">
                     <input
                       value={promoInput}
-                      onChange={(e) => { setPromoInput(e.target.value); setPromoError(false); }}
+                      onChange={(e) => { setPromoInput(e.target.value); setPromoError(null); }}
                       placeholder={t("promo_ph")}
                       maxLength={40}
                       className="h-[52px] min-w-0 flex-1 rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-base uppercase outline-none placeholder:normal-case placeholder:text-muted-foreground focus:border-primary"
@@ -153,12 +153,12 @@ export function Onboarding() {
                   </div>
                   {appliedPromo && (
                     <p className="mt-2 text-xs font-semibold text-primary">
-                      ✅ {t("promo_applied_short", { code: appliedPromo.code })}
+                      {t("promo_applied_short", { code: appliedPromo.code })}
                     </p>
                   )}
                   {promoError && (
                     <p className="mt-2 text-xs font-semibold" style={{ color: "#FF6B6B" }}>
-                      ❌ {t("promo_invalid_short")}
+                      {t(promoError === "inactive" ? "promo_inactive_short" : "promo_invalid_short")}
                     </p>
                   )}
                 </div>
