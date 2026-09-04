@@ -315,6 +315,7 @@ export interface RecapRow {
   subscribers: number;
   revenue: number;
   commission: number;
+  lastUsed: string | null;
 }
 
 export interface MonthlyRecap {
@@ -327,16 +328,41 @@ export interface MonthlyRecap {
   conversion: number;
   rows: RecapRow[];
   totals: { subscribers: number; revenue: number; commission: number };
+  entries: SubscriptionLogEntry[];
 }
 
-/** Months present in the log, newest first, always including the current month. */
+export const COMMISSION_RATE = 0.1;
+const ARCHIVE_PREFIX = "nutrilens_monthly_archive_";
+const LAST_MONTH_KEY = "nutrilens_last_recap_month";
+const RECAP_DISMISS_KEY = "nutrilens_recap_banner_dismissed";
+
+export function monthLabel(m: string, locale = "fr-FR"): string {
+  const [y, mm] = m.split("-");
+  return new Date(Number(y), Number(mm) - 1, 1).toLocaleDateString(locale, {
+    month: "long",
+    year: "numeric",
+  });
+}
+
+/** Months present in the log or archives, newest first, always including the current month. */
 export function availableMonths(): string[] {
   const set = new Set<string>([monthKey(new Date())]);
   for (const s of getSubscriptionsLog()) set.add(monthKey(s.date));
+  if (typeof window !== "undefined") {
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k?.startsWith(ARCHIVE_PREFIX)) set.add(k.slice(ARCHIVE_PREFIX.length));
+      }
+    } catch {}
+  }
   return [...set].sort().reverse();
 }
 
 export function buildMonthlyRecap(month: string): MonthlyRecap {
+  const archived = read<MonthlyRecap | null>(ARCHIVE_PREFIX + month, null);
+  if (archived && month !== monthKey(new Date())) return archived;
+
   const log = getSubscriptionsLog().filter((s) => monthKey(s.date) === month);
   const totalUsers = getTotalUsers();
   const byCode = new Map<string, RecapRow>();
@@ -350,10 +376,13 @@ export function buildMonthlyRecap(month: string): MonthlyRecap {
       subscribers: 0,
       revenue: 0,
       commission: 0,
+      lastUsed: null as string | null,
     };
-    row.subscribers += 1;
+    // Only first-time payments with this code earn the influencer a commission.
+    if (s.isFirstPayment !== false) row.subscribers += 1;
     row.revenue = row.subscribers * PRICING.usd.regular;
-    row.commission = row.revenue * 0.1;
+    row.commission = row.revenue * COMMISSION_RATE;
+    if (!row.lastUsed || new Date(s.date) > new Date(row.lastUsed)) row.lastUsed = s.date;
     byCode.set(key, row);
   }
 
@@ -373,30 +402,88 @@ export function buildMonthlyRecap(month: string): MonthlyRecap {
       revenue: rows.reduce((a, r) => a + r.revenue, 0),
       commission: rows.reduce((a, r) => a + r.commission, 0),
     },
+    entries: log,
   };
 }
 
+const SEP = "═══════════════════════════════════════";
+
 export function recapToText(r: MonthlyRecap): string {
-  const lines = [
-    "NutriSnap — Récapitulatif mensuel",
-    `Mois : ${r.month}`,
-    "",
-    "STATISTIQUES GLOBALES",
-    `Nouveaux abonnés : ${r.subscribers}`,
-    `Revenus : ${r.revenueFcfa.toLocaleString("fr-FR")} FCFA + $${r.revenueUsd.toFixed(2)}`,
-    `Codes promo utilisés : ${r.promoUses}`,
-    `Taux de conversion : ${r.conversion.toFixed(1)}% (${r.subscribers}/${r.totalUsers})`,
-    "",
-    "PAR INFLUENCEUR",
-    "Influenceur | Code | Nouveaux abonnés | Revenus générés | Commission (10%)",
+  const fmtDate = (d: string) => new Date(d).toLocaleDateString("fr-FR");
+  const lines: string[] = [
+    `NUTRISNAP — RÉCAPITULATIF ${monthLabel(r.month).toUpperCase()}`,
+    `Généré le: ${new Date().toLocaleDateString("fr-FR")}`,
+    SEP,
+    "RÉSUMÉ GLOBAL",
+    `Total abonnés: ${r.subscribers}`,
+    `Revenus totaux: ${r.revenueFcfa.toLocaleString("fr-FR")} FCFA / ${r.revenueUsd.toFixed(2)}$`,
+    `Codes promo utilisés: ${r.promoUses}`,
+    SEP,
+    "PERFORMANCE PAR INFLUENCEUR",
   ];
+  if (r.rows.length === 0) lines.push("Aucun code promo utilisé ce mois-ci.");
   for (const row of r.rows) {
     lines.push(
-      `${row.influencer} | ${row.code} | ${row.subscribers} | $${row.revenue.toFixed(2)} | $${row.commission.toFixed(2)}`,
+      `${row.influencer} — Code: ${row.code}`,
+      `Nouveaux abonnés: ${row.subscribers}`,
+      `Revenus générés: ${row.revenue.toFixed(2)}$`,
+      `Commission due (10%): ${row.commission.toFixed(2)}$`,
+      `Dernière utilisation: ${row.lastUsed ? fmtDate(row.lastUsed) : "—"}`,
+      "",
     );
   }
-  lines.push(
-    `TOTAL | — | ${r.totals.subscribers} | $${r.totals.revenue.toFixed(2)} | $${r.totals.commission.toFixed(2)}`,
-  );
+  lines.push(SEP, "DÉTAIL DES ABONNEMENTS");
+  if (r.entries.length === 0) lines.push("Aucun abonnement ce mois-ci.");
+  for (const e of r.entries) {
+    lines.push(
+      `${fmtDate(e.date)} | ${e.firstName || "—"} | ${e.country || "—"} | ${e.promoCode ?? "Aucun"} | ${
+        e.currency === "FCFA" ? `${e.amount.toLocaleString("fr-FR")} FCFA` : `${e.amount.toFixed(2)}$`
+      }`,
+    );
+  }
+  lines.push(SEP);
   return lines.join("\n");
+}
+
+/**
+ * On the first visit of a new month: archive the previous month's recap and
+ * reset the live promo `uses` counters. Returns the month that was archived.
+ */
+export function ensureMonthlyArchive(): string | null {
+  if (typeof window === "undefined") return null;
+  const current = monthKey(new Date());
+  const last = read<string | null>(LAST_MONTH_KEY, null);
+  if (!last) {
+    write(LAST_MONTH_KEY, current);
+    return null;
+  }
+  if (last === current) return null;
+
+  write(ARCHIVE_PREFIX + last, buildMonthlyRecap(last));
+  // Reset monthly counters, keeping last-used dates.
+  const stats = read<PromoCode[]>(STATS_KEY, []);
+  write(
+    STATS_KEY,
+    stats.map((s) => ({ ...s, uses: 0 })),
+  );
+  write(LAST_MONTH_KEY, current);
+  try {
+    localStorage.removeItem(RECAP_DISMISS_KEY);
+  } catch {}
+  return last;
+}
+
+/** Previous month whose recap banner should show, or null. */
+export function pendingRecapMonth(): string | null {
+  if (typeof window === "undefined") return null;
+  const now = new Date();
+  const prev = monthKey(new Date(now.getFullYear(), now.getMonth() - 1, 1));
+  const archived = read<MonthlyRecap | null>(ARCHIVE_PREFIX + prev, null);
+  if (!archived) return null;
+  if (read<string | null>(RECAP_DISMISS_KEY, null) === prev) return null;
+  return prev;
+}
+
+export function dismissRecapBanner(month: string) {
+  write(RECAP_DISMISS_KEY, month);
 }
