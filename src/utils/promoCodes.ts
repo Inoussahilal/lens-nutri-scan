@@ -153,24 +153,53 @@ export interface SubscriptionLogEntry {
   influencer: string | null;
   country: string;
   firstName: string;
+  /** Stable per-device/user key, used to detect renewals. */
+  userKey?: string;
+  /** True only for a user's very first paid month with that promo code. */
+  isFirstPayment?: boolean;
 }
 
 export function getSubscriptionsLog(): SubscriptionLogEntry[] {
   return read<SubscriptionLogEntry[]>(LOG_KEY, []);
 }
 
+function currentUserKey(fallback: string): string {
+  if (typeof window === "undefined") return fallback;
+  try {
+    let k = localStorage.getItem("nutrilens_user_key");
+    if (!k) {
+      k =
+        (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now())) +
+        "-" +
+        fallback;
+      localStorage.setItem("nutrilens_user_key", k);
+    }
+    return k;
+  } catch {
+    return fallback;
+  }
+}
+
 export function logSubscription(entry: Omit<SubscriptionLogEntry, "id" | "date">) {
   const log = getSubscriptionsLog();
+  const userKey = entry.userKey || currentUserKey(entry.firstName || "user");
+  const code = entry.promoCode?.toUpperCase() ?? null;
+  const alreadyPaidWithCode =
+    !!code &&
+    log.some((s) => s.userKey === userKey && (s.promoCode?.toUpperCase() ?? null) === code);
   const next: SubscriptionLogEntry[] = [
     {
       ...entry,
+      userKey,
+      isFirstPayment: !alreadyPaidWithCode,
       id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
       date: new Date().toISOString(),
     },
     ...log,
-  ].slice(0, 100);
+  ].slice(0, 500);
   write(LOG_KEY, next);
 }
+
 
 export interface AdminSettings {
   maintenance: boolean;
