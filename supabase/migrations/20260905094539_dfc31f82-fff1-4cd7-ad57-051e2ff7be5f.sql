@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.app_stats() FROM anon, authenticated, public;
