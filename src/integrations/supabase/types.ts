@@ -14,13 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          activity_level: string
+          calorie_goal: number
+          country: string
+          created_at: string
+          email: string | null
+          first_name: string
+          free_scans_used: number
+          id: string
+          is_subscribed: boolean
+          last_name: string
+          updated_at: string
+        }
+        Insert: {
+          activity_level?: string
+          calorie_goal?: number
+          country?: string
+          created_at?: string
+          email?: string | null
+          first_name?: string
+          free_scans_used?: number
+          id: string
+          is_subscribed?: boolean
+          last_name?: string
+          updated_at?: string
+        }
+        Update: {
+          activity_level?: string
+          calorie_goal?: number
+          country?: string
+          created_at?: string
+          email?: string | null
+          first_name?: string
+          free_scans_used?: number
+          id?: string
+          is_subscribed?: boolean
+          last_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      app_stats: {
+        Args: never
+        Returns: {
+          new_users_30d: number
+          new_users_today: number
+          subscribers: number
+          total_scans: number
+          total_users: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
