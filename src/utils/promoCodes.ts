@@ -332,6 +332,8 @@ export interface MonthlyRecap {
 }
 
 export const COMMISSION_RATE = 0.1;
+/** 10% of $9.99, rounded down to the cent. */
+export const COMMISSION_PER_SUB = 0.99;
 const ARCHIVE_PREFIX = "nutrilens_monthly_archive_";
 const LAST_MONTH_KEY = "nutrilens_last_recap_month";
 const RECAP_DISMISS_KEY = "nutrilens_recap_banner_dismissed";
@@ -381,7 +383,7 @@ export function buildMonthlyRecap(month: string): MonthlyRecap {
     // Only first-time payments with this code earn the influencer a commission.
     if (s.isFirstPayment !== false) row.subscribers += 1;
     row.revenue = row.subscribers * PRICING.usd.regular;
-    row.commission = row.revenue * COMMISSION_RATE;
+    row.commission = row.subscribers * COMMISSION_PER_SUB;
     if (!row.lastUsed || new Date(s.date) > new Date(row.lastUsed)) row.lastUsed = s.date;
     byCode.set(key, row);
   }

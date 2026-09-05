@@ -17,7 +17,11 @@ import {
   availableMonths,
   buildMonthlyRecap,
   monthKey,
+  monthLabel,
   recapToText,
+  ensureMonthlyArchive,
+  pendingRecapMonth,
+  dismissRecapBanner,
   type PromoCode,
   type SubscriptionLogEntry,
 } from "@/utils/promoCodes";
@@ -114,8 +118,13 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [newInfluencer, setNewInfluencer] = useState("");
   const [maintenance, setMaintenance] = useState(false);
   const [whatsapp, setWhatsapp] = useState(DEFAULT_WHATSAPP);
+  const [banner, setBanner] = useState<string | null>(null);
+  const [current, setCurrent] = useState<ReturnType<typeof buildMonthlyRecap> | null>(null);
 
   useEffect(() => {
+    ensureMonthlyArchive();
+    setBanner(pendingRecapMonth());
+    setCurrent(buildMonthlyRecap(monthKey(new Date())));
     setCodes(getPromoCodes());
     setLog(getSubscriptionsLog());
     const s = getAdminSettings();
@@ -180,12 +189,42 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
           </button>
         </header>
 
+        {banner && (
+          <div
+            className="flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-primary"
+            style={{ background: "rgba(168,255,62,0.12)", border: "1px solid rgba(168,255,62,0.4)" }}
+          >
+            <span>📊 Le récapitulatif de {monthLabel(banner)} est disponible !</span>
+            <button
+              onClick={() => {
+                dismissRecapBanner(banner);
+                setBanner(null);
+              }}
+              aria-label="Fermer"
+              className="tap shrink-0 rounded-full bg-white/10 px-2.5 py-1 text-[11px] text-foreground"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         {/* Stats */}
         <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Card label="📱 Scans aujourd'hui" value={String(stats.scans)} />
           <Card label="💰 Abonnements" value={String(stats.subs)} />
           <Card label="🎟️ Codes utilisés" value={String(stats.promoUses)} />
           <Card label="📊 Code le + utilisé" value={stats.top} />
+          <Card
+            label="💵 Revenus ce mois (FCFA)"
+            value={(current?.revenueFcfa ?? 0).toLocaleString("fr-FR")}
+          />
+          <Card
+            label="💰 Commissions dues ce mois ($)"
+            value={`$${(current?.totals.commission ?? 0).toFixed(2)}`}
+          />
+          <div className="col-span-2 rounded-2xl border border-white/7 bg-white/[0.04] p-4 text-xs text-muted-foreground">
+            📅 Récapitulatif disponible le 1er de chaque mois
+          </div>
         </section>
 
         {/* Promo table */}
@@ -328,20 +367,13 @@ function MonthlyRecap() {
   const [recap, setRecap] = useState<ReturnType<typeof buildMonthlyRecap> | null>(null);
 
   useEffect(() => {
+    ensureMonthlyArchive();
     setMonths(availableMonths());
   }, []);
 
   useEffect(() => {
     setRecap(buildMonthlyRecap(month));
   }, [month]);
-
-  function label(m: string) {
-    const [y, mm] = m.split("-");
-    return new Date(Number(y), Number(mm) - 1, 1).toLocaleDateString("fr-FR", {
-      month: "long",
-      year: "numeric",
-    });
-  }
 
   function exportRecap() {
     if (!recap) return;
@@ -366,7 +398,7 @@ function MonthlyRecap() {
         >
           {months.map((m) => (
             <option key={m} value={m}>
-              {label(m)}
+              {monthLabel(m)}
             </option>
           ))}
         </select>
@@ -392,13 +424,14 @@ function MonthlyRecap() {
                   <th className="py-2 pr-3">Code</th>
                   <th className="py-2 pr-3">Nouveaux abonnés</th>
                   <th className="py-2 pr-3">Revenus générés</th>
-                  <th className="py-2">Commission (10%)</th>
+                  <th className="py-2 pr-3">Commission (10%)</th>
+                  <th className="py-2">Dernière utilisation</th>
                 </tr>
               </thead>
               <tbody>
                 {recap.rows.length === 0 ? (
                   <tr className="border-t border-white/5">
-                    <td colSpan={5} className="py-3 text-muted-foreground">
+                    <td colSpan={6} className="py-3 text-muted-foreground">
                       Aucun abonnement avec code promo ce mois-ci.
                     </td>
                   </tr>
@@ -409,7 +442,10 @@ function MonthlyRecap() {
                       <td className="py-2 pr-3 font-semibold">{r.code}</td>
                       <td className="py-2 pr-3 tabular-nums">{r.subscribers}</td>
                       <td className="py-2 pr-3 tabular-nums">${r.revenue.toFixed(2)}</td>
-                      <td className="py-2 tabular-nums">${r.commission.toFixed(2)}</td>
+                      <td className="py-2 pr-3 tabular-nums">${r.commission.toFixed(2)}</td>
+                      <td className="py-2 text-muted-foreground">
+                        {r.lastUsed ? new Date(r.lastUsed).toLocaleDateString("fr-FR") : "—"}
+                      </td>
                     </tr>
                   ))
                 )}
@@ -418,7 +454,8 @@ function MonthlyRecap() {
                   <td className="py-2 pr-3">—</td>
                   <td className="py-2 pr-3 tabular-nums">{recap.totals.subscribers}</td>
                   <td className="py-2 pr-3 tabular-nums">${recap.totals.revenue.toFixed(2)}</td>
-                  <td className="py-2 tabular-nums">${recap.totals.commission.toFixed(2)}</td>
+                  <td className="py-2 pr-3 tabular-nums">${recap.totals.commission.toFixed(2)}</td>
+                  <td className="py-2">—</td>
                 </tr>
               </tbody>
             </table>
