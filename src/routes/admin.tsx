@@ -17,7 +17,11 @@ import {
   availableMonths,
   buildMonthlyRecap,
   monthKey,
+  monthLabel,
   recapToText,
+  ensureMonthlyArchive,
+  pendingRecapMonth,
+  dismissRecapBanner,
   type PromoCode,
   type SubscriptionLogEntry,
 } from "@/utils/promoCodes";
@@ -328,20 +332,13 @@ function MonthlyRecap() {
   const [recap, setRecap] = useState<ReturnType<typeof buildMonthlyRecap> | null>(null);
 
   useEffect(() => {
+    ensureMonthlyArchive();
     setMonths(availableMonths());
   }, []);
 
   useEffect(() => {
     setRecap(buildMonthlyRecap(month));
   }, [month]);
-
-  function label(m: string) {
-    const [y, mm] = m.split("-");
-    return new Date(Number(y), Number(mm) - 1, 1).toLocaleDateString("fr-FR", {
-      month: "long",
-      year: "numeric",
-    });
-  }
 
   function exportRecap() {
     if (!recap) return;
@@ -366,7 +363,7 @@ function MonthlyRecap() {
         >
           {months.map((m) => (
             <option key={m} value={m}>
-              {label(m)}
+              {monthLabel(m)}
             </option>
           ))}
         </select>
@@ -392,13 +389,14 @@ function MonthlyRecap() {
                   <th className="py-2 pr-3">Code</th>
                   <th className="py-2 pr-3">Nouveaux abonnés</th>
                   <th className="py-2 pr-3">Revenus générés</th>
-                  <th className="py-2">Commission (10%)</th>
+                  <th className="py-2 pr-3">Commission (10%)</th>
+                  <th className="py-2">Dernière utilisation</th>
                 </tr>
               </thead>
               <tbody>
                 {recap.rows.length === 0 ? (
                   <tr className="border-t border-white/5">
-                    <td colSpan={5} className="py-3 text-muted-foreground">
+                    <td colSpan={6} className="py-3 text-muted-foreground">
                       Aucun abonnement avec code promo ce mois-ci.
                     </td>
                   </tr>
@@ -409,7 +407,10 @@ function MonthlyRecap() {
                       <td className="py-2 pr-3 font-semibold">{r.code}</td>
                       <td className="py-2 pr-3 tabular-nums">{r.subscribers}</td>
                       <td className="py-2 pr-3 tabular-nums">${r.revenue.toFixed(2)}</td>
-                      <td className="py-2 tabular-nums">${r.commission.toFixed(2)}</td>
+                      <td className="py-2 pr-3 tabular-nums">${r.commission.toFixed(2)}</td>
+                      <td className="py-2 text-muted-foreground">
+                        {r.lastUsed ? new Date(r.lastUsed).toLocaleDateString("fr-FR") : "—"}
+                      </td>
                     </tr>
                   ))
                 )}
@@ -418,7 +419,8 @@ function MonthlyRecap() {
                   <td className="py-2 pr-3">—</td>
                   <td className="py-2 pr-3 tabular-nums">{recap.totals.subscribers}</td>
                   <td className="py-2 pr-3 tabular-nums">${recap.totals.revenue.toFixed(2)}</td>
-                  <td className="py-2 tabular-nums">${recap.totals.commission.toFixed(2)}</td>
+                  <td className="py-2 pr-3 tabular-nums">${recap.totals.commission.toFixed(2)}</td>
+                  <td className="py-2">—</td>
                 </tr>
               </tbody>
             </table>
