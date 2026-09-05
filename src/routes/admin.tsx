@@ -118,8 +118,13 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [newInfluencer, setNewInfluencer] = useState("");
   const [maintenance, setMaintenance] = useState(false);
   const [whatsapp, setWhatsapp] = useState(DEFAULT_WHATSAPP);
+  const [banner, setBanner] = useState<string | null>(null);
+  const [current, setCurrent] = useState<ReturnType<typeof buildMonthlyRecap> | null>(null);
 
   useEffect(() => {
+    ensureMonthlyArchive();
+    setBanner(pendingRecapMonth());
+    setCurrent(buildMonthlyRecap(monthKey(new Date())));
     setCodes(getPromoCodes());
     setLog(getSubscriptionsLog());
     const s = getAdminSettings();
@@ -184,12 +189,42 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
           </button>
         </header>
 
+        {banner && (
+          <div
+            className="flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-sm font-semibold text-primary"
+            style={{ background: "rgba(168,255,62,0.12)", border: "1px solid rgba(168,255,62,0.4)" }}
+          >
+            <span>📊 Le récapitulatif de {monthLabel(banner)} est disponible !</span>
+            <button
+              onClick={() => {
+                dismissRecapBanner(banner);
+                setBanner(null);
+              }}
+              aria-label="Fermer"
+              className="tap shrink-0 rounded-full bg-white/10 px-2.5 py-1 text-[11px] text-foreground"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         {/* Stats */}
         <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Card label="📱 Scans aujourd'hui" value={String(stats.scans)} />
           <Card label="💰 Abonnements" value={String(stats.subs)} />
           <Card label="🎟️ Codes utilisés" value={String(stats.promoUses)} />
           <Card label="📊 Code le + utilisé" value={stats.top} />
+          <Card
+            label="💵 Revenus ce mois (FCFA)"
+            value={(current?.revenueFcfa ?? 0).toLocaleString("fr-FR")}
+          />
+          <Card
+            label="💰 Commissions dues ce mois ($)"
+            value={`$${(current?.totals.commission ?? 0).toFixed(2)}`}
+          />
+          <div className="col-span-2 rounded-2xl border border-white/7 bg-white/[0.04] p-4 text-xs text-muted-foreground">
+            📅 Récapitulatif disponible le 1er de chaque mois
+          </div>
         </section>
 
         {/* Promo table */}
